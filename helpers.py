@@ -26,8 +26,9 @@ def get_stage_dict(area_region):
     for upcoming_stage in area_status["next_stages"]:
         # then, for each upcoming stage, we update the result accordingly
         # TODO I don't think we can trust that "next_stages" will be in order of time, but we're assuming so until proven otherwise
-        for i in range(int(upcoming_stage["stage_start_timestamp"][11:13]), 24):
-            upcoming_stages[i] = int(upcoming_stage["stage"])
+        if upcoming_stage["stage_start_timestamp"][:10] == str(datetime.now().date()):  # only consider today
+            for i in range(int(upcoming_stage["stage_start_timestamp"][11:13]), 24):
+                upcoming_stages[i] = int(upcoming_stage["stage"])
     return upcoming_stages
 
 
@@ -54,11 +55,12 @@ def get_hours_out(area):
     # TODO: Note that the array may only contain 4 elements, in which case we may need to mod stage number by 4 when performing lookup
     # We summarise data by representing the lowest stage for load shedding to occur
     stage_hours = {i: 0 for i in range(0, 24)}
-    for stage, hours_off in enumerate(schedule):
-        # now we need all the hours in that stage
-        # hours_in_stage = []
-        for slot in hours_off:
-            hours_in_stage = [i for i in range(int(slot[:2]), int(slot[6:8]))]
+    for stage, hours_off_in_stage in enumerate(schedule):
+        hours_in_stage = []
+        for slot in hours_off_in_stage: # for each loadshedding slot in each stage,
+            start = int(slot[:2])
+            stop = int(slot[6:8]) if int(slot[6:8]) != 0 else 24 # need to use 24h to represent midnight
+            hours_in_stage = hours_in_stage + [i for i in range(start, stop)]
         for i in hours_in_stage:
             # we only want to set a stage if we know we don't have loadshedding at that point
             if stage_hours[i] == 0:
@@ -113,4 +115,4 @@ def schedule_group(group):
 
 
 if __name__ == "__main__":
-    print(stringify_can_join(schedule_group("minecraft")))
+    print(stringify_can_join(schedule_group("mw2")))
