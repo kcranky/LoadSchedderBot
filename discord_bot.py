@@ -162,9 +162,13 @@ async def schedule(ctx, *, group: str):
     #
     # db_helpers.add_name("groups", group)
     # ctx.send("Added the group (if it didn't already exist).")
-    result = helpers.schedule_group(group)
-    msg = "You can schedule {} at these times today: \n".format(group)
-    msg += helpers.stringify_can_join(result)
+    hours_dict = helpers.schedule_group(group)
+    result = helpers.stringify_can_join(hours_dict)
+    if result == "[]":
+        msg = "No {} today :(".format(group)
+    else:
+        msg = "You can schedule {} at these times today: \n".format(group)
+        msg += result
     await ctx.send(msg)
 
 
