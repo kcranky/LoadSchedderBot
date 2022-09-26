@@ -11,17 +11,17 @@ TODO: handle 400 status requests
 """
 
 
-import constants
 from datetime import timedelta
 import KEYS
 import requests_cache
 
 AUTH_HEADER = {'Token': KEYS.sepush_token}
-
+API_BASE = "https://developer.sepush.co.za/business/2.0/"
+CACHE_NAME = "requests_cache"
 
 def perform_request(endpoint, cache_time=timedelta(days=1)):
-    session = requests_cache.CachedSession(constants.CACHE_NAME, expire_after=cache_time)
-    response = session.get(constants.API_BASE + endpoint, headers={'Token': KEYS.sepush_token})
+    session = requests_cache.CachedSession(CACHE_NAME, expire_after=cache_time)
+    response = session.get(API_BASE + endpoint, headers={'Token': KEYS.sepush_token})
     return response.json()
 
 
