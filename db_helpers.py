@@ -202,5 +202,6 @@ def get_group_area_names(group_name):
 
 if __name__ == "__main__":
     # create the test DB and populate with test data
-    create_da
+    create_db()
+    populate_test_data()
     # TODO: run tests
