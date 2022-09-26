@@ -121,7 +121,7 @@ def _check_userdatapair_exists(user, table, value):
 
 def insert_userdata_pair(user, table, data):
     """
-    Creates an entry in the user_areas assosciation table.
+    Creates an entry in an assosciation table.
     """
     # first we must check if both the user and the <table>s data exist in the database, and add them if not
     add_name("users", user)
@@ -133,6 +133,16 @@ def insert_userdata_pair(user, table, data):
             VALUES ((SELECT id FROM users WHERE name = ?), (SELECT id FROM {} WHERE name = ?));".format(table, table[:-1], table)
         _exec_sql(sql, (user, data))
 
+def remove_userdata_pair(user, table, data):
+    """
+    Removes an entry from an assosciation table.
+    """
+    # next, we check if the pair already exists.
+    if _check_userdatapair_exists(user, table, data):
+        # if it exists, remove it
+        sql = "DELETE FROM user_{} WHERE (user_id, {}_id) = \
+            ((SELECT id FROM users WHERE name = ?), (SELECT id FROM {} WHERE name = ?));".format(table, table[:-1], table)
+        _exec_sql(sql, (user, data))
 
 def get_groups():
     sql = "SELECT name FROM groups;"

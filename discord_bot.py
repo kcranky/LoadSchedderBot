@@ -1,15 +1,18 @@
 #!/usr/bin/python3
-
-from operator import indexOf
 import discord
 from discord.ext import commands
-import random
 import KEYS
 import asyncio
 
 import loadshedding_helpers
 import db_helpers
 import helpers
+
+"""
+discord_bot
+
+TODO: Look at command groups rather than the underscores as I have them now
+"""
 
 description = '''A bot to help you schedule games.
 
@@ -24,15 +27,14 @@ intents.members = True
 intents.reactions = True
 intents.message_content = True
 
-bot = commands.Bot(command_prefix='?',
-                   description=description, intents=intents)
+bot = commands.Bot(command_prefix='?',description=description, intents=intents)
 
 
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
-    # TODO: Create DB here if it doesn't exist
+    db_helpers.create_db()
 
 
 @bot.command()
@@ -45,7 +47,8 @@ async def area_search(ctx, *, area: str):
     if len(area_list) != 0:
         message = "I found the following areas! React with yours to add it to your profile.\n"
         for i in range(min(9, len(area_list))):
-            message += UNICODE_INTS[i] + area_list[i]["name"] + " - " + area_list[i]["region"] + "\n"
+            area = area_list[i]
+            message += UNICODE_INTS[i] + area["name"] + " - " + area["region"] + "\n"
     else:
         message = "I found no areas matching {}, sorry!".format(area)
         await ctx.send(message)
@@ -80,7 +83,6 @@ async def area_search(ctx, *, area: str):
                     return
         await ctx.send("Fine then, ignore me >:(")
     else:
-        # FIXME : Check if the emoji is one of the desired ones?
         try:
             index_area_selected = UNICODE_INTS.index(str(reaction_emoji))
             area_selected = area_list[index_area_selected]
@@ -90,6 +92,35 @@ async def area_search(ctx, *, area: str):
         except ValueError:
             # User reacted with a bad emoji
             await ctx.send("Can't follow instructions, eh? I'll let you try again.")
+
+
+@bot.command()
+async def group_add(ctx, *, group: str):
+    """
+    Add a group!
+    """
+    db_helpers.add_name("groups", group)
+    await ctx.message.add_reaction('\N{THUMBS UP SIGN}')
+
+
+
+@bot.command()
+async def group_join(ctx, *, group: str):
+    """
+    Join a given group.
+    """
+    db_helpers.insert_userdata_pair(str(ctx.author), "groups", group)
+    await ctx.send("Added {} to your groups, {}!".format(group, str(ctx.author)))
+
+
+@bot.command()
+async def group_remove(ctx, *, group: str):
+    """
+    Remove a group
+    """
+    msg = ""
+    groups = db_helpers.remove_userdata_pair(str(ctx.author), "groups", group)
+    await ctx.message.add_reaction('\N{THUMBS UP SIGN}')
 
 
 @bot.command()
@@ -106,37 +137,6 @@ async def group_list(ctx):
         msg = "You're not a part of any groups!"
     await ctx.send(msg)
 
-
-@bot.command()
-async def group_remove(ctx, *, group: str):
-    """
-    Remove a group
-    """
-    msg = ""
-    groups = db_helpers.remove_user_data(str(ctx.author), "groups", group)
-    await ctx.message.add_reaction('\N{THUMBS UP SIGN}')
-
-
-@bot.command()
-async def group_add(ctx, *, group: str):
-    """
-    Add a group!
-    """
-    db_helpers.add_name("groups", group)
-    await ctx.message.add_reaction('\N{THUMBS UP SIGN}')
-
-
-@bot.command()
-async def group_join(ctx, *, group: str):
-    """
-    Join a given group.
-    """
-    # check if the user and the group exist
-    #
-    # db_helpers.add_name("groups", group)
-    # ctx.send("Added the group (if it didn't already exist).")
-    db_helpers.insert_userdata_pair(str(ctx.author), "groups", group)
-    await ctx.send("Added {} to your groups, {}!".format(group, str(ctx.author)))
 
 @bot.command()
 async def group_list_all(ctx):
