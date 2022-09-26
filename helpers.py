@@ -3,7 +3,7 @@
 import db_helpers
 import loadshedding_helpers
 
-from datetime import datetime
+from datetime import date, datetime
 
 
 def get_stage_dict(area_region):
@@ -34,6 +34,7 @@ def get_stage_dict(area_region):
 def get_hours_out(area):
     # TODO make date a parameter?
     current_date = str(datetime.now().date())  # format is YYYY-MM-DD
+    current_hour = int(datetime.now().hour)
 
     area_info = loadshedding_helpers.get_area_schedule(area)
     dates_known = [day["date"] for day in area_info["schedule"]["days"]]
@@ -68,21 +69,16 @@ def get_hours_out(area):
     upcoming_stages = get_stage_dict(area_info["info"]["region"])
     # we can now modify our can_join dict, and return that
     can_join_dict = {}
-    for i in range(0, 24):
-        can_join_dict[i] = True if (upcoming_stages[i] < stage_hours[i]) or (
-            stage_hours[i] == 0) else False
+    for i in range(current_hour, 24):
+        can_join_dict[i] = True if (upcoming_stages[i] < stage_hours[i]) or (stage_hours[i] == 0) else False
     return can_join_dict
 
 
-def can_join(area):
-    result = {i: True for i in range(0, 24)}
-    hours_out = helpers.get_hours_out(area)
-    for hour in hours_out:
-        result[hour] = False
-    return result
-
-
 def stringify_can_join(availability_dict):
+    """
+    Takes in a dict of keys ending in 23.
+    The dict can start at any point
+    """
     in_available_slot = False
     availability_list = []
     for k in availability_dict:
@@ -102,7 +98,8 @@ def stringify_can_join(availability_dict):
 
 
 def combine_schedules(schedule_array):
-    all_avail = {i: True for i in range(0, 24)}
+    current_hour = int(datetime.now().hour)
+    all_avail = {i: True for i in range(current_hour, 24)}
     for schedule in schedule_array:
         for hour in schedule:
             all_avail[hour] = schedule[hour] if schedule[hour] == False else all_avail[hour]
@@ -113,3 +110,7 @@ def schedule_group(group):
     area_list = db_helpers.get_group_area_names(group)
     res = [get_hours_out(area) for area in area_list]
     return combine_schedules(res)
+
+
+if __name__ == "__main__":
+    print(stringify_can_join(schedule_group("minecraft")))

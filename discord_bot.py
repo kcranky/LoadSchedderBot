@@ -128,7 +128,7 @@ async def group_list(ctx):
     """
     Returns the groups you're a part of
     """
-    msg = ""
+    msg = "Here are your groups, {}:\n".format(str(ctx.author))
     groups = db_helpers.get_user_data(str(ctx.author), "groups")
     if len(groups) > 0:
         for i, g in enumerate(groups):
@@ -154,7 +154,7 @@ async def group_list_all(ctx):
 
 
 @bot.command()
-async def group_schedule(ctx, *, group: str):
+async def schedule(ctx, *, group: str):
     """
     Returns when everyone in the group is available to join
     """
