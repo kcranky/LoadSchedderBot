@@ -1,2 +1,5 @@
 KEYS.py
 .cache/
+__pycache__/
+*.sqlite
+*.sqlite3
