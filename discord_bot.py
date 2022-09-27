@@ -19,7 +19,7 @@ description = '''A bot to help you schedule games.
 
 For help, type ?help'''
 
-TIMEOUT = 10.0
+TIMEOUT = 60.0
 UNICODE_INTS = ["{}\N{COMBINING ENCLOSING KEYCAP}".format(num) for num in range(0, 10)]
 
 
@@ -42,13 +42,14 @@ async def area_search(ctx, *, area: str):
     """
         Search for an area. If it's found, you can add it to your areas.
     """
+    # TODO: Could we make this neater?
     areas = loadshedding_helpers.find_area(area.upper().replace(" ", "+"))
     area_list = areas["areas"]
     if len(area_list) != 0:
         message = "I found the following areas! React with yours to add it to your profile.\n"
         for i in range(min(9, len(area_list))):
             area = area_list[i]
-            message += UNICODE_INTS[i] + area["name"] + " - " + area["region"] + "\n"
+            message += UNICODE_INTS[i] + " " + area["name"] + " - " + area["region"] + "\n"
     else:
         message = "I found no areas matching {}, sorry!".format(area)
         await ctx.send(message)
@@ -93,6 +94,44 @@ async def area_search(ctx, *, area: str):
             # User reacted with a bad emoji
             await ctx.send("Can't follow instructions, eh? You'll have to ask me again.")
 
+
+@bot.command()
+async def area_list(ctx):
+    """
+    List your areas, and potentially delete them
+    """
+    area_list = db_helpers.get_user_data(str(ctx.author), "areas")
+    if len(area_list) == 0:
+        ctx.send("You have no areas assosciated with your username. Find one to add using \"?area_search\"")
+        return
+    else:
+        message = "Here are your areas! Remove them by reacting with their number.\n"
+        for i in range(min(9, len(area_list))):
+            message += UNICODE_INTS[i] + " " + area_list[i][0] + "\n"
+        message_sent = await ctx.send(message)
+
+        for i in range(min(9, len(area_list))):
+            await message_sent.add_reaction(UNICODE_INTS[i])
+
+        def check(reaction, user):
+            if user == ctx.author:
+                return str(reaction.emoji)
+
+        try:
+            reaction_emoji, user = await bot.wait_for('reaction_add', timeout=TIMEOUT/2, check=check)
+        except asyncio.TimeoutError:
+            # if we timeout here, let's check if the user has already reacted before we get salty
+            await ctx.send("None of your areas have been removed")
+        else:
+            try:
+                index_area_selected = UNICODE_INTS.index(str(reaction_emoji))
+                area_selected = area_list[index_area_selected][0]
+                db_helpers.remove_userdata_pair(
+                    str(ctx.author), "areas", area_selected)
+                await ctx.send("Removed {} from your areas, {}!".format(area_selected, str(ctx.author)))
+            except ValueError:
+                # User reacted with a bad emoji
+                await ctx.send("Can't follow instructions, eh? You'll have to ask me again.")
 
 @bot.command()
 async def group_add(ctx, *, group: str):
