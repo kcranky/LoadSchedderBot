@@ -13,6 +13,7 @@ import os, random  # uwu
 discord_bot
 
 TODO: Look at command groups rather than the underscores as I have them now
+TODO: Need a command to completely remove groups from the db
 """
 
 description = '''A bot to help you schedule games.
@@ -105,7 +106,7 @@ async def area_list(ctx):
         ctx.send("You have no areas assosciated with your username. Find one to add using \"?area_search\"")
         return
     else:
-        message = "Here are your areas! Remove them by reacting with their number.\n"
+        message = "Here are your areas! Remove one by reacting with it's number.\n"
         for i in range(min(9, len(area_list))):
             message += UNICODE_INTS[i] + " " + area_list[i][0] + "\n"
         message_sent = await ctx.send(message)
@@ -133,6 +134,7 @@ async def area_list(ctx):
                 # User reacted with a bad emoji
                 await ctx.send("Can't follow instructions, eh? You'll have to ask me again.")
 
+
 @bot.command()
 async def group_add(ctx, *, group: str):
     """
@@ -151,34 +153,51 @@ async def group_join(ctx, *, group: str):
     if str(ctx.author) == "bam#5036" and group.upper() == "DOTA":
         await ctx.send(file=discord.File("images/ashley_dota/" + random.choice(os.listdir("images/ashley_dota/"))))
         return
-
+    # TODO ideally we want to check if the group exists first, and ask the user to create it
+    if db_helpers.get_group_id(group.upper()) == -1:
+        await ctx.send("This group doesn't exist. Create it first!")
+        return
     db_helpers.insert_userdata_pair(str(ctx.author), "groups", group)
     await ctx.send("Added {} to your groups, {}!".format(group, str(ctx.author)))
 
 
 @bot.command()
-async def group_remove(ctx, *, group: str):
-    """
-    Remove a group
-    """
-    msg = ""
-    groups = db_helpers.remove_userdata_pair(str(ctx.author), "groups", group)
-    await ctx.message.add_reaction('\N{THUMBS UP SIGN}')
-
-
-@bot.command()
 async def group_list(ctx):
     """
-    Returns the groups you're a part of
+    List your groups, and potentially delete them
     """
-    msg = "Here are your groups, {}:\n".format(str(ctx.author))
-    groups = db_helpers.get_user_data(str(ctx.author), "groups")
-    if len(groups) > 0:
-        for i, g in enumerate(groups):
-            msg += "{}: {}\n".format(i + 1, g[0])
+    group_list = db_helpers.get_user_data(str(ctx.author), "groups")
+    if len(group_list) == 0:
+        ctx.send("You have no areas assosciated with your username. Find one to add using \"?area_search\"")
+        return
     else:
-        msg = "You're not a part of any groups!"
-    await ctx.send(msg)
+        message = "Here are your groups! Remove one by reacting with it's number.\n"
+        for i in range(min(9, len(group_list))):
+            message += UNICODE_INTS[i] + " " + group_list[i][0] + "\n"
+        message_sent = await ctx.send(message)
+
+        for i in range(min(9, len(group_list))):
+            await message_sent.add_reaction(UNICODE_INTS[i])
+
+        def check(reaction, user):
+            if user == ctx.author:
+                return str(reaction.emoji)
+
+        try:
+            reaction_emoji, user = await bot.wait_for('reaction_add', timeout=TIMEOUT/2, check=check)
+        except asyncio.TimeoutError:
+            # if we timeout here, let's check if the user has already reacted before we get salty
+            await ctx.send("None of your groups have been removed")
+        else:
+            try:
+                index_area_selected = UNICODE_INTS.index(str(reaction_emoji))
+                area_selected = group_list[index_area_selected][0]
+                db_helpers.remove_userdata_pair(
+                    str(ctx.author), "areas", area_selected)
+                await ctx.send("Removed {} from your groups, {}!".format(area_selected, str(ctx.author)))
+            except ValueError:
+                # User reacted with a bad emoji
+                await ctx.send("Can't follow instructions, eh? You'll have to ask me again.")
 
 
 @bot.command()
