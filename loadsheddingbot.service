@@ -1,0 +1,15 @@
+[Unit]
+Description = LoadsheddingBot Python Script
+After = network.target # Assuming you want to start after network interfaces are made available
+ 
+[Service]
+Type = simple
+ExecStart = python3 /home/pi/DiscordLoadsheddingBot/discord_bot.py
+User = pi
+Group = pi
+Restart = on-failure # Restart when there are errors
+RestartSec = 5
+TimeoutStartSec = infinity
+ 
+[Install]
+WantedBy = multi-user.target # Make it accessible to other users
