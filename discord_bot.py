@@ -7,6 +7,7 @@ import asyncio
 import loadshedding_helpers
 import db_helpers
 import helpers
+import os, random  # uwu
 
 """
 discord_bot
@@ -23,7 +24,6 @@ UNICODE_INTS = ["{}\N{COMBINING ENCLOSING KEYCAP}".format(num) for num in range(
 
 
 intents = discord.Intents.default()
-intents.members = True
 intents.reactions = True
 intents.message_content = True
 
@@ -91,7 +91,7 @@ async def area_search(ctx, *, area: str):
             await ctx.send("Added {} to your areas, {}!".format(area_selected["name"], str(ctx.author)))
         except ValueError:
             # User reacted with a bad emoji
-            await ctx.send("Can't follow instructions, eh? I'll let you try again.")
+            await ctx.send("Can't follow instructions, eh? You'll have to ask me again.")
 
 
 @bot.command()
@@ -109,6 +109,10 @@ async def group_join(ctx, *, group: str):
     """
     Join a given group.
     """
+    if str(ctx.author) == "bam#5036" and group.upper() == "DOTA":
+        await ctx.send(file=discord.File("images/ashley_dota/" + random.choice(os.listdir("images/ashley_dota/"))))
+        return
+
     db_helpers.insert_userdata_pair(str(ctx.author), "groups", group)
     await ctx.send("Added {} to your groups, {}!".format(group, str(ctx.author)))
 
@@ -158,6 +162,11 @@ async def schedule(ctx, *, group: str):
     """
     Returns when everyone in the group is available to join
     """
+    # first, a  little easter egg
+    if group.upper() == "UWU":
+        await ctx.send(file=discord.File("images/uwu/" + random.choice(os.listdir("images/uwu/"))))
+        return
+
     # check if the user and the group exist
     #
     # db_helpers.add_name("groups", group)
