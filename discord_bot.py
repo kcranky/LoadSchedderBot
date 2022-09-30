@@ -193,7 +193,7 @@ async def group_list(ctx):
                 index_area_selected = UNICODE_INTS.index(str(reaction_emoji))
                 area_selected = group_list[index_area_selected][0]
                 db_helpers.remove_userdata_pair(
-                    str(ctx.author), "areas", area_selected)
+                    str(ctx.author), "groups", area_selected)
                 await ctx.send("Removed {} from your groups, {}!".format(area_selected, str(ctx.author)))
             except ValueError:
                 # User reacted with a bad emoji
