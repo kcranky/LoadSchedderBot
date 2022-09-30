@@ -153,7 +153,6 @@ async def group_join(ctx, *, group: str):
     if str(ctx.author) == "bam#5036" and group.upper() == "DOTA":
         await ctx.send(file=discord.File("images/ashley_dota/" + random.choice(os.listdir("images/ashley_dota/"))))
         return
-    # TODO ideally we want to check if the group exists first, and ask the user to create it
     if db_helpers.get_group_id(group.upper()) == -1:
         await ctx.send("This group doesn't exist. Create it first!")
         return
