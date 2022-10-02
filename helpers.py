@@ -14,7 +14,7 @@ def get_stage_dict(area_region):
 
     # TODO this isn't exact, it might be a good idea to reach out to se push and determine if there is a better way of doing this.
     # It'd be nice if they had something more direct in the requests to tie area region and area together, for example a prefix on the area id
-    if "CAPE TOWN" in area_region.upper():
+    if "CAPETOWN" in area_region.upper():
         area_status = status["capetown"]
     else:
         # otherwise, we assume eskom
