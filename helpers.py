@@ -35,7 +35,6 @@ def get_stage_dict(area_region):
 def get_hours_out(area):
     # TODO make date a parameter?
     current_date = str(datetime.now().date())  # format is YYYY-MM-DD
-    current_hour = int(datetime.now().hour)
 
     area_info = loadshedding_helpers.get_area_schedule(area)
     dates_known = [day["date"] for day in area_info["schedule"]["days"]]
@@ -71,19 +70,20 @@ def get_hours_out(area):
     upcoming_stages = get_stage_dict(area_info["info"]["region"])
     # we can now modify our can_join dict, and return that
     can_join_dict = {}
-    for i in range(current_hour, 24):
+    for i in range(0, 24):
         can_join_dict[i] = True if (upcoming_stages[i] < stage_hours[i]) or (stage_hours[i] == 0) else False
     return can_join_dict
 
 
 def stringify_can_join(availability_dict):
     """
-    Takes in a dict of keys ending in 23.
-    The dict can start at any point
+    Takes in a can_join dict and stringifies it into a readable format.
+    Only shows the dict from the current hour, as hours prior to the current one may be showing the incorrect stage.
     """
+    current_hour = int(datetime.now().hour)
     in_available_slot = False
     availability_list = []
-    for k in availability_dict:
+    for k in range(current_hour, 24):
         if availability_dict[k] == True and in_available_slot == False:
             in_available_slot = True
             availability_list.append("{0:02d}:00".format(k))
@@ -100,8 +100,7 @@ def stringify_can_join(availability_dict):
 
 
 def combine_schedules(schedule_array):
-    current_hour = int(datetime.now().hour)
-    all_avail = {i: True for i in range(current_hour, 24)}
+    all_avail = {i: True for i in range(0, 24)}
     for schedule in schedule_array:
         for hour in schedule:
             all_avail[hour] = schedule[hour] if schedule[hour] == False else all_avail[hour]
