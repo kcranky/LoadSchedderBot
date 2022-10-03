@@ -136,9 +136,9 @@ async def area_list(ctx):
 
 
 @bot.command()
-async def group_add(ctx, *, group: str):
+async def group_create(ctx, *, group: str):
     """
-    Add a group!
+    Create a group
     """
     db_helpers.add_name("groups", group)
     await ctx.message.add_reaction('\N{THUMBS UP SIGN}')
@@ -210,7 +210,7 @@ async def group_list_all(ctx):
         for i, g in enumerate(groups):
             msg += "{}: {}\n".format(i + 1, g[0])
     else:
-        msg = "No groups found! Add one with the \"?group_add\" command."
+        msg = "No groups found! Add one with the \"?group_create\" command."
     await ctx.send(msg)
 
 
