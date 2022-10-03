@@ -237,6 +237,18 @@ async def schedule(ctx, *, group: str):
         msg += result
     await ctx.send(msg)
 
+@bot.command()
+async def schedule_advanced(ctx, *, group: str):
+    """
+    Returns an image with a breakdown of each member's available times
+    """
+    # first, let's check if the group exists
+    if db_helpers.get_group_id(group) != -1:
+        # get the graph
+        image = helpers.generate_graph(group)
+        await ctx.send(file=discord.File(image))
+    else:
+        await ctx.send("Group does not exist.")
 
 @bot.event
 async def on_command_error(ctx, error):

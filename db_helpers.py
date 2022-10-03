@@ -90,6 +90,9 @@ def _exec_sql(sql, data_tuple):
     cur.execute(sql, data_tuple)
     conn.commit()
     results = cur.fetchall()
+    # desc = cur.description
+    # names = [fields[0] for fields in desc]
+    # print(names)
     cur.close()
     conn.close()
     return results
@@ -105,6 +108,14 @@ def add_name(table, name):
     if len(items) == 0:
         sql = "INSERT INTO {} (name) VALUES (?);".format(table)
         _exec_sql(sql, [name])
+
+
+def get_name(table, id):
+    """
+    Return the name of an ID for a given table
+    """
+    sql = "Select name from {} where id = (?);".format(table)
+    return _exec_sql(sql, (id,))[0][0]
 
 
 def _check_userdatapair_exists(user, table, value):
@@ -174,26 +185,37 @@ def get_group_id(group_name):
         return -1
 
 
-def get_group_users(group_id):
+def get_group_members(group_id):
     """
-    Get all the users in a group given the group ID
+    Get all the user ids in a group given the group ID
     """
     results = _exec_sql(
         "Select user_id from user_groups where group_id = (?)", (group_id,))
     if len(results) != 0:
-        res = [i[0] for i in results]
+        return [i[0] for i in results]
     else:
         return -1
 
 
 def get_users_areas(user_id_array):
+    """
+    Given an array of user IDs, return all their area IDs
+    """
     results = _exec_sql("SELECT DISTINCT area_id FROM user_areas WHERE user_id IN ({})".format(
         ','.join('?'*len(user_id_array))), user_id_array)
     if len(results) != 0:
-        return results
+        return [i[0] for i in results]
     else:
         return -1
 
+def get_area_users_by_group(area, group):
+    """
+    Return all users in a given area, that are also in a given group
+    """
+    u_in_a = "Select user_id FROM user_areas WHERE area_id IN (SELECT id FROM areas WHERE areas.name = (?))"  ## with area as a param
+    u_in_g = "SELECT user_id FROM user_groups WHERE group_id IN (SELECT id FROM groups WHERE groups.name = (?))"
+    sql = "SELECT name FROM users where id in (" + u_in_a + ") AND (" + u_in_g + ")" 
+    return _exec_sql(sql, (area, group,))
 
 def get_group_area_names(group_name):
     sql = "Select name FROM areas WHERE id in( \
@@ -212,6 +234,7 @@ def get_group_area_names(group_name):
 
 if __name__ == "__main__":
     # create the test DB and populate with test data
-    create_db()
-    populate_test_data()
+    # create_db()
+    # populate_test_data()
     # TODO: run tests
+    print(get_area_users("capetown-5-claremont", "dota"))

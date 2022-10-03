@@ -1,0 +1,1 @@
+A temporary directory which keeps hold of graphs from the advanced schedule command.

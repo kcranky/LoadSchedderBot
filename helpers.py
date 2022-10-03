@@ -2,9 +2,13 @@
 
 import db_helpers
 import loadshedding_helpers
+import os
+import matplotlib.pyplot as plt
 
 from datetime import date, datetime
 
+CHECK = "\U00002713"
+CROSS = "\U0000274E"
 
 def get_stage_dict(area_region):
     """
@@ -30,6 +34,13 @@ def get_stage_dict(area_region):
             for i in range(int(upcoming_stage["stage_start_timestamp"][11:13]), 24):
                 upcoming_stages[i] = int(upcoming_stage["stage"])
     return upcoming_stages
+
+
+def get_all_stage_dicts():
+    res = {}
+    res["eskom"] = get_stage_dict("eskom")
+    res["capetown"] = get_stage_dict("capetown")
+    return res
 
 
 def get_hours_out(area):
@@ -111,6 +122,65 @@ def schedule_group(group):
     area_list = db_helpers.get_group_area_names(group)
     res = [get_hours_out(area) for area in area_list]
     return combine_schedules(res)
+
+
+def generate_graph(group):
+    # So what do we want to acheive?
+    """
+    Generate a human-readable graph to determine non-optimal schedule times
+    """
+    # start by removing all previous pngs from the graph location
+    graph_dir = "images/generated_graphs/"
+    for file in os.listdir(graph_dir):
+        if file.endswith(".png"):
+            os.remove(os.path.join(graph_dir, file))
+    plot_name = "{}{}{}.png".format(graph_dir, group, datetime.now())
+    users = db_helpers.get_group_members(db_helpers.get_group_id(group))
+    # 2: Get the areas for each user
+    area_names = [db_helpers.get_name("areas", area) for area in db_helpers.get_users_areas(users)]
+    # 3: Get the stages for each area
+    data = {area : get_hours_out(area) for area in area_names}
+
+    # data is now held by area. But we want it to be labelled by user
+    data_by_user = {}
+    for area in data:
+        users_in_area = db_helpers.get_area_users_by_group(area, group)
+        user_list = [users[0] for users in users_in_area]
+        for user in user_list:
+            if user in data_by_user:
+                data_by_user[user] = combine_schedules([data_by_user[user], data[area]])
+            else:
+                data_by_user[user] = data[area]
+
+    # now we need to format the data to just be a 2d array, consisting of rowLabels*24 elements
+    formatted_data = {}
+    rowLabels = [key for key in data_by_user]
+    current_hour = int(datetime.now().hour)
+    for key in data_by_user:
+        formatted_data[key] = [data_by_user[key][k] for k in range(current_hour, 24)]
+    # now replace all trues with ticks, etc
+    for key in formatted_data:
+        formatted_data[key] = [CHECK if element == True else CROSS for element in formatted_data[key]]
+    plot_data = [formatted_data[key] for key in rowLabels]
+
+    # Set up and plot the timetable
+    plt.rcParams["font.family"] = "FreeSerif"
+    colLabels = ["{}h".format(i) for i in range(current_hour, 24)]
+    fig, ax = plt.subplots()
+    ax.set_axis_off() 
+    table = ax.table( 
+        cellText = plot_data,
+        rowLabels = rowLabels,
+        colLabels = colLabels, 
+        rowColours =["palegreen"] * (1 + len(data)),
+        colColours =["palegreen"] * 24,
+    cellLoc ='center',
+    loc ='upper left')
+    ax.set_title('Advanced schedule for {} for {}.'.format(group, datetime.now().date()), 
+             fontweight ="bold") 
+    plt.savefig("{}".format(plot_name), bbox_inches='tight')
+
+    return plot_name
 
 
 if __name__ == "__main__":
