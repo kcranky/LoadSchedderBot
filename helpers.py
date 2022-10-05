@@ -159,9 +159,12 @@ def generate_graph(group):
     for key in data_by_user:
         formatted_data[key] = [data_by_user[key][k] for k in range(current_hour, 24)]
     # now replace all trues with ticks, etc
+    colors = {}
     for key in formatted_data:
+        colors[key] = ["chartreuse" if element == True else "salmon" for element in formatted_data[key]]
         formatted_data[key] = [CHECK if element == True else "X" for element in formatted_data[key]]
     plot_data = [formatted_data[key] for key in rowLabels]
+    cell_colors = [colors[key] for key in rowLabels]
 
     # Set up and plot the timetable
     plt.rcParams["font.family"] = "FreeSerif"
@@ -172,12 +175,14 @@ def generate_graph(group):
         cellText = plot_data,
         rowLabels = rowLabels,
         colLabels = colLabels, 
-        rowColours =["palegreen"] * (1 + len(data)),
+        cellColours= cell_colors,
+        rowColours =["cadetblue"] * (1 + len(data)),
         colColours =["palegreen"] * 24,
     cellLoc ='center',
     loc ='upper left')
-    ax.set_title('Advanced schedule for {} for {}.'.format(group, datetime.now().date()), 
-             fontweight ="bold") 
+    plt.suptitle('Advanced schedule for {} for {}'.format(group, datetime.now().date()), 
+             fontweight ="bold")
+    ax.set_title("Generated at {}".format(datetime.now().strftime("%H:%M:%S")), fontweight="bold", fontsize=10)
     plt.savefig("{}".format(plot_name), bbox_inches='tight')
 
     return plot_name
