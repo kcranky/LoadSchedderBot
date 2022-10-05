@@ -160,7 +160,7 @@ def generate_graph(group):
         formatted_data[key] = [data_by_user[key][k] for k in range(current_hour, 24)]
     # now replace all trues with ticks, etc
     for key in formatted_data:
-        formatted_data[key] = [CHECK if element == True else CROSS for element in formatted_data[key]]
+        formatted_data[key] = [CHECK if element == True else "X" for element in formatted_data[key]]
     plot_data = [formatted_data[key] for key in rowLabels]
 
     # Set up and plot the timetable
