@@ -250,13 +250,17 @@ async def schedule(ctx, group: str, time=None):
         msg = "Hey there "
 
         for member in members:
-            print(member)
             name = member[:member.rfind("#")]
             discriminator = member[member.rfind("#")+1:]
             user = discord.utils.get(ctx.guild.members, name = name, discriminator = discriminator)
             if user is not None and user is not ctx.author:
                 msg += f"{user.mention}, "
-        msg = msg[:-2] + ". {} would like to schedule {} for {} today!".format(ctx.author, group, time)
+        msg = msg[:-2] + ". {} would like to schedule {} for {} today! RSVP below.".format(ctx.message.author.mention, group, time)
+
+        message_sent = await ctx.send(msg)
+        await message_sent.add_reaction('\N{THUMBS UP SIGN}')
+        await message_sent.add_reaction('\N{THUMBS DOWN SIGN}')
+        return
     else:
         msg = "I couldn't understand your time format, but y" + msg[1:]
 
