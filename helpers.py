@@ -189,6 +189,8 @@ def generate_graph(group):
     return plot_name
 
 def isTimeFormat(input):
+    if input is None:
+        return False
     try:
         time.strptime(input, '%H:%M')
         return True

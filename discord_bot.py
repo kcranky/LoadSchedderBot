@@ -261,7 +261,7 @@ async def schedule(ctx, group: str, time=None):
         await message_sent.add_reaction('\N{THUMBS UP SIGN}')
         await message_sent.add_reaction('\N{THUMBS DOWN SIGN}')
         return
-    else:
+    elif time != None:
         msg = "I couldn't understand your time format, but y" + msg[1:]
 
     await ctx.send(msg)
