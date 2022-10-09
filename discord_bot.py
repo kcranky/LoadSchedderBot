@@ -27,6 +27,7 @@ UNICODE_INTS = ["{}\N{COMBINING ENCLOSING KEYCAP}".format(num) for num in range(
 intents = discord.Intents.default()
 intents.reactions = True
 intents.message_content = True
+intents.members = True
 
 bot = commands.Bot(command_prefix='?',description=description, intents=intents)
 
@@ -215,26 +216,50 @@ async def group_list_all(ctx):
 
 
 @bot.command()
-async def schedule(ctx, *, group: str):
+async def schedule(ctx, group: str, time=None):
     """
-    Returns when everyone in the group is available to join
+    Returns when everyone in the group is available to join.
+    If you provide a time in the format HH:MM, you can ask everyone to join you at that time.
     """
+    group = group.replace(" ", "")
     # first, a  little easter egg
     if group.upper() == "UWU":
         await ctx.send(file=discord.File("images/uwu/" + random.choice(os.listdir("images/uwu/"))))
         return
 
     # check if the user and the group exist
-    #
-    # db_helpers.add_name("groups", group)
-    # ctx.send("Added the group (if it didn't already exist).")
-    hours_dict = helpers.schedule_group(group)
-    result = helpers.stringify_can_join(hours_dict)
-    if result == "[]":
-        msg = "No {} today :(".format(group)
+    if db_helpers.get_id("groups", group) == -1:
+        await ctx.send("I couldn't find a group by that name!")
+        return
+
+    # If there's just one parameter
+    if time is None or helpers.isTimeFormat(time) == False:
+        hours_dict = helpers.schedule_group(group)
+        result = helpers.stringify_can_join(hours_dict)
+        if result == "[]":
+            msg = "No {} today :(".format(group)
+        else:
+            msg = "You can schedule {} at these times today: \n".format(group)
+            msg += result
+
+    if helpers.isTimeFormat(time):
+        # Hey
+        # get all users in the group:
+        uids = db_helpers.get_group_members(db_helpers.get_group_id(group))
+        members = [db_helpers.get_name("users", i) for i in uids]
+        msg = "Hey there "
+
+        for member in members:
+            print(member)
+            name = member[:member.rfind("#")]
+            discriminator = member[member.rfind("#")+1:]
+            user = discord.utils.get(ctx.guild.members, name = name, discriminator = discriminator)
+            if user is not None and user is not ctx.author:
+                msg += f"{user.mention}, "
+        msg = msg[:-2] + ". {} would like to schedule {} for {} today!".format(ctx.author, group, time)
     else:
-        msg = "You can schedule {} at these times today: \n".format(group)
-        msg += result
+        msg = "I couldn't understand your time format, but y" + msg[1:]
+
     await ctx.send(msg)
 
 @bot.command()

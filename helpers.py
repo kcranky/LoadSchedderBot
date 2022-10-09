@@ -5,7 +5,8 @@ import loadshedding_helpers
 import os
 import matplotlib.pyplot as plt
 
-from datetime import date, datetime
+from datetime import datetime
+import time
 
 CHECK = "\U00002713"
 CROSS = "\U0000274C"
@@ -187,6 +188,12 @@ def generate_graph(group):
 
     return plot_name
 
+def isTimeFormat(input):
+    try:
+        time.strptime(input, '%H:%M')
+        return True
+    except ValueError:
+        return False
 
 if __name__ == "__main__":
     print(stringify_can_join(schedule_group("mw2")))

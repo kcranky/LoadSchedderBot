@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """
 Contains helper methods for database use.
 
@@ -108,6 +109,18 @@ def add_name(table, name):
     if len(items) == 0:
         sql = "INSERT INTO {} (name) VALUES (?);".format(table)
         _exec_sql(sql, [name])
+
+
+def get_id(table, name):
+    """
+    Return the ID of a name for a given table
+    Returns -1 if the name was not found
+    """
+    sql = "Select id from {} where name = (?);".format(table)
+    try:
+        return _exec_sql(sql, (name,))[0][0]
+    except:
+        return -1
 
 
 def get_name(table, id):
