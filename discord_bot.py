@@ -238,7 +238,7 @@ async def schedule(ctx, *, group: str):
     await ctx.send(msg)
 
 @bot.command()
-async def schedule_advanced(ctx, *, group: str):
+async def timetable(ctx, *, group: str):
     """
     Returns an image with a breakdown of each member's available times
     """
