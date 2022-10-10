@@ -18,9 +18,16 @@ def get_stage_dict(area_region):
     status = loadshedding_helpers.get_status()
 
     # TODO this isn't exact, it might be a good idea to reach out to se push and determine if there is a better way of doing this.
+    # For example, CT region 14, Table View, is city supplied according to the CoCT website, but does not have "Cape town" in the region flag
+    # The sepush API lists Western Cape as the region, so this check is invalid. But there is also no means of knowing this is CoCT supplied other
+    # than storing that knowledge locally
     # It'd be nice if they had something more direct in the requests to tie area region and area together, for example a prefix on the area id
-    if "CAPETOWN" in area_region.upper():
-        area_status = status["capetown"]
+    if "CAPE TOWN" in area_region.upper():
+        # It is possible (though unlikely) that there isn't a CT specific entry
+        try:
+            area_status = status["capetown"]
+        except:
+            area_status = status["eskom"]
     else:
         # otherwise, we assume eskom
         area_status = status["eskom"]
@@ -47,7 +54,6 @@ def get_all_stage_dicts():
 def get_hours_out(area):
     # TODO make date a parameter?
     current_date = str(datetime.now().date())  # format is YYYY-MM-DD
-
     area_info = loadshedding_helpers.get_area_schedule(area)
     dates_known = [day["date"] for day in area_info["schedule"]["days"]]
 
