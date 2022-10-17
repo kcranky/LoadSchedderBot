@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import discord
 from discord.ext import commands
-import KEYS
+import configparser
 import asyncio
 
 import loadshedding_helpers
@@ -318,5 +318,7 @@ async def on_command_error(ctx, error):
 #     """Is the bot cool?"""
 #     await ctx.send('Yes, the bot is cool.')
 
-
-bot.run(KEYS.discord_bot_token)
+if __name__ == "__main__":
+    config = configparser.ConfigParser()
+    config.read("config.ini")
+    bot.run(config["Tokens"]["discord_bot"])

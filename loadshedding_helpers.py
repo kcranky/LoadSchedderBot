@@ -12,16 +12,18 @@ TODO: handle 400 status requests
 
 
 from datetime import timedelta
-import KEYS
+import configparser
 import requests_cache
 
-AUTH_HEADER = {'Token': KEYS.sepush_token}
+config = configparser.ConfigParser()
+config.read("config.ini")
+AUTH_HEADER = {'Token': config["Tokens"]["sepush"]}
 API_BASE = "https://developer.sepush.co.za/business/2.0/"
 CACHE_NAME = "requests_cache"
 
 def _perform_request(endpoint, cache_time=timedelta(days=1)):
     session = requests_cache.CachedSession(CACHE_NAME, expire_after=cache_time)
-    response = session.get(API_BASE + endpoint, headers={'Token': KEYS.sepush_token})
+    response = session.get(API_BASE + endpoint, headers=AUTH_HEADER)
     return response.json()
 
 

@@ -1,4 +1,4 @@
-KEYS.py
+config.ini
 .cache/
 __pycache__/
 *.sqlite
