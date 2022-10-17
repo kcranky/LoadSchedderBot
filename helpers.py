@@ -9,7 +9,6 @@ from datetime import datetime
 import time
 
 CHECK = "\U00002713"
-CROSS = "\U0000274C"
 
 def get_stage_dict(area_region):
     """
