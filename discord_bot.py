@@ -29,7 +29,8 @@ intents.reactions = True
 intents.message_content = True
 intents.members = True
 
-bot = commands.Bot(command_prefix='?',description=description, intents=intents)
+help_command = commands.DefaultHelpCommand(no_category = 'Commands', show_parameter_descriptions=False)
+bot = commands.Bot(command_prefix='?',description=description, intents=intents, help_command = help_command)
 
 
 @bot.event
