@@ -137,26 +137,15 @@ async def area_list(ctx):
 
 
 @bot.command()
-async def group_create(ctx, *, group: str):
-    """
-    Create a group
-    """
-    db_helpers.add_name("groups", group)
-    await ctx.message.add_reaction('\N{THUMBS UP SIGN}')
-
-
-
-@bot.command()
 async def group_join(ctx, *, group: str):
     """
-    Join a given group.
+    Join a given group. Creates the group if it does not exist.
     """
     if str(ctx.author) == "bam#5036" and group.upper() == "DOTA":
         await ctx.send(file=discord.File("images/ashley_dota/" + random.choice(os.listdir("images/ashley_dota/"))))
         return
     if db_helpers.get_group_id(group.upper()) == -1:
-        await ctx.send("This group doesn't exist. Create it first!")
-        return
+        db_helpers.add_name("groups", group)
     db_helpers.insert_userdata_pair(str(ctx.author), "groups", group)
     await ctx.send("Added {} to your groups, {}!".format(group, str(ctx.author)))
 
@@ -168,7 +157,7 @@ async def group_list(ctx):
     """
     group_list = db_helpers.get_user_data(str(ctx.author), "groups")
     if len(group_list) == 0:
-        ctx.send("You have no areas assosciated with your username. Find one to add using \"?area_search\"")
+        ctx.send("You have no groups assosciated with your username. Create or join one!")
         return
     else:
         message = "Here are your groups! Remove one by reacting with it's number.\n"
@@ -186,15 +175,22 @@ async def group_list(ctx):
         try:
             reaction_emoji, user = await bot.wait_for('reaction_add', timeout=TIMEOUT/2, check=check)
         except asyncio.TimeoutError:
-            # if we timeout here, let's check if the user has already reacted before we get salty
-            await ctx.send("None of your groups have been removed")
+            # await ctx.send("None of your groups have been removed")
+            # If nothing happens, then nothing happens. We don't need to tell the user that nothing happens
+            pass
         else:
             try:
-                index_area_selected = UNICODE_INTS.index(str(reaction_emoji))
-                area_selected = group_list[index_area_selected][0]
-                db_helpers.remove_userdata_pair(
-                    str(ctx.author), "groups", area_selected)
-                await ctx.send("Removed {} from your groups, {}!".format(area_selected, str(ctx.author)))
+                index_group_selected = UNICODE_INTS.index(str(reaction_emoji))
+                group_selected = group_list[index_group_selected][0]
+                group_id = db_helpers.get_group_id(group_selected)
+                print(group_selected, group_id)
+                db_helpers.remove_userdata_pair(str(ctx.author), "groups", group_selected)
+                msg = "Removed {} from your groups, {}!".format(group_selected, str(ctx.author))
+                # see if there are any more members in the group. If not, delete the group
+                if db_helpers.get_group_members(group_id) == -1:
+                    db_helpers.remove_group(group_id)
+                    msg += "\nYou were also the last member, so I removed the group, too."
+                await ctx.send(msg)
             except ValueError:
                 # User reacted with a bad emoji
                 await ctx.send("Can't follow instructions, eh? You'll have to ask me again.")

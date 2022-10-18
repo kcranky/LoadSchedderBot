@@ -172,6 +172,9 @@ def get_groups():
     sql = "SELECT name FROM groups;"
     return _exec_sql(sql, ())
 
+def remove_group(group_id):
+    sql = "DELETE FROM groups WHERE id = ?;"
+    _exec_sql(sql, (group_id,))
 
 def get_user_data(user, req_data):
     """
@@ -250,4 +253,5 @@ if __name__ == "__main__":
     # create_db()
     # populate_test_data()
     # TODO: run tests
-    print(get_area_users_by_group("capetown-5-claremont", "dota"))
+    # print(get_area_users_by_group("capetown-5-claremont", "dota"))
+    remove_group(5)
