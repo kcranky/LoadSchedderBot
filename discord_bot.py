@@ -141,9 +141,13 @@ async def area_list(ctx):
 async def group_join(ctx, *, group: str):
     """
     Join a given group. Creates the group if it does not exist.
+    Groups must be a single word/string.
     """
     if str(ctx.author) == "bam#5036" and group.upper() == "DOTA":
         await ctx.send(file=discord.File("images/ashley_dota/" + random.choice(os.listdir("images/ashley_dota/"))))
+        return
+    if group.count(" ") > 0:
+        await ctx.send("Group names can't have spaces!")
         return
     if db_helpers.get_group_id(group.upper()) == -1:
         db_helpers.add_name("groups", group)
@@ -184,7 +188,6 @@ async def group_list(ctx):
                 index_group_selected = UNICODE_INTS.index(str(reaction_emoji))
                 group_selected = group_list[index_group_selected][0]
                 group_id = db_helpers.get_group_id(group_selected)
-                print(group_selected, group_id)
                 db_helpers.remove_userdata_pair(str(ctx.author), "groups", group_selected)
                 msg = "Removed {} from your groups, {}!".format(group_selected, str(ctx.author))
                 # see if there are any more members in the group. If not, delete the group
@@ -226,7 +229,9 @@ async def schedule(ctx, group: str, time=None):
 
     # check if the user and the group exist
     if db_helpers.get_id("groups", group) == -1:
-        await ctx.send("I couldn't find a group by that name!")
+        msg = "I couldn't find a group with that name!\n"
+        msg += "Groups need to be a single word/string. If your group has multiple words, recreate it as a single word group."
+        await ctx.send(msg)
         return
 
     # If there's just one parameter
