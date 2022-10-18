@@ -17,7 +17,7 @@ def create_db():
     if not exists(DB_NAME):
         try:
             conn = sqlite3.connect(DB_NAME)
-            create_tables(conn)
+            _create_tables(conn)
         except sqlite3.Error as e:
             return
         finally:
@@ -25,7 +25,7 @@ def create_db():
                 conn.close()
 
 
-def create_tables(conn):
+def _create_tables(conn):
     PRIMARY_TABLES = ["users", "areas", "groups"]
     for table in PRIMARY_TABLES:
         conn.execute("""CREATE TABLE {}(
@@ -91,9 +91,6 @@ def _exec_sql(sql, data_tuple):
     cur.execute(sql, data_tuple)
     conn.commit()
     results = cur.fetchall()
-    # desc = cur.description
-    # names = [fields[0] for fields in desc]
-    # print(names)
     cur.close()
     conn.close()
     return results
@@ -147,12 +144,10 @@ def insert_userdata_pair(user, table, data):
     """
     Creates an entry in an assosciation table.
     """
-    # first we must check if both the user and the <table>s data exist in the database, and add them if not
+    # check if both the user and the <table>s data exist in the database, and add them if not
     add_name("users", user)
     add_name(table, data)
-    # next, we check if the pair already exists.
     if not _check_userdatapair_exists(user, table, data):
-        # finally if not, we add it
         sql = "INSERT INTO user_{} (user_id, {}_id) \
             VALUES ((SELECT id FROM users WHERE name = ?), (SELECT id FROM {} WHERE name = ?));".format(table, table[:-1], table)
         _exec_sql(sql, (user, data))
@@ -161,9 +156,7 @@ def remove_userdata_pair(user, table, data):
     """
     Removes an entry from an assosciation table.
     """
-    # next, we check if the pair already exists.
     if _check_userdatapair_exists(user, table, data):
-        # if it exists, remove it
         sql = "DELETE FROM user_{} WHERE (user_id, {}_id) = \
             ((SELECT id FROM users WHERE name = ?), (SELECT id FROM {} WHERE name = ?));".format(table, table[:-1], table)
         _exec_sql(sql, (user, data))
@@ -250,8 +243,6 @@ def get_group_area_names(group_name):
 
 if __name__ == "__main__":
     # create the test DB and populate with test data
-    # create_db()
-    # populate_test_data()
+    create_db()
+    populate_test_data()
     # TODO: run tests
-    # print(get_area_users_by_group("capetown-5-claremont", "dota"))
-    remove_group(5)
