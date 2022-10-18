@@ -1,0 +1,4 @@
+discord.py==2.0.1
+matplotlib==3.6.0
+requests==2.25.1
+requests_cache==0.9.6

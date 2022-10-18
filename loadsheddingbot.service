@@ -1,0 +1,13 @@
+[Unit]
+Description = LoadsheddingBot Python Script
+After = network.target
+ 
+[Service]
+Type = simple
+WorkingDirectory = /home/pi/DiscordLoadsheddingBot
+ExecStart = python3 /home/pi/DiscordLoadsheddingBot/discord_bot.py
+User = pi
+Group = pi
+ 
+[Install]
+WantedBy = multi-user.target

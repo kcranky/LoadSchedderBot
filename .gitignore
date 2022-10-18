@@ -1,0 +1,6 @@
+config.ini
+.cache/
+__pycache__/
+*.sqlite
+*.sqlite3
+images/generated_graphs/*.png
