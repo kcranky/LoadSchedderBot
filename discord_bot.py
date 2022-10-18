@@ -283,40 +283,6 @@ async def timetable(ctx, *, group: str):
 async def on_command_error(ctx, error):
     await ctx.send(f"An error occured: {str(error)}")
 
-# @bot.command()
-# async def roll(ctx, dice: str):
-#     """Rolls a dice in NdN format.
-#     TODO use this as a meme for predicting load shedding"""
-#     try:
-#         rolls, limit = map(int, dice.split('d'))
-#     except Exception:
-#         await ctx.send('Format has to be in NdN!')
-#         return
-
-#     result = ', '.join(str(random.randint(1, limit)) for r in range(rolls))
-#     await ctx.send(result)
-
-
-# @bot.command()
-# async def joined(ctx, member: discord.Member):
-#     """Says when a member joined."""
-#     await ctx.send(f'{member.name} joined {discord.utils.format_dt(member.joined_at)}')
-
-
-# @bot.group()
-# async def cool(ctx):
-#     """Says if a user is cool.
-
-#     In reality this just checks if a subcommand is being invoked.
-#     """
-#     if ctx.invoked_subcommand is None:
-#         await ctx.send(f'No, {ctx.subcommand_passed} is not cool')
-
-
-# @cool.command(name='bot')
-# async def _bot(ctx):
-#     """Is the bot cool?"""
-#     await ctx.send('Yes, the bot is cool.')
 
 if __name__ == "__main__":
     config = configparser.ConfigParser()
