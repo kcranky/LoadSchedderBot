@@ -1,6 +1,23 @@
-Be sure to define a "discord_bot_token" variable and "sepush_token" variable in a file called "KEYS.py" in the root directory.
+# LoadSchedder
 
-Use loadsheddingbot.service to use the bot as a service
+LoadSchedder is a Discord bot written in Python designed to collate loadshedding schedules of multiple users. It makes use of Discord.py and the [sepush API](https://documenter.getpostman.com/view/1296288/UzQuNk3E).
 
-Make sure the code is run from /home/pi/DiscordLoadsheddingBot
-If not, change the "WorkingDirectory" variable in loadsheddingbot.service
+I'm not currently hosting this for the public, and I don't currently have intentions to unless the sepush guys get back to me as I only get 50 API requests a day. You're welcome to self-host it (basic instructions below) but note that support may be limited.
+
+If you do end up using this, or have ideas on how to improve it, please let me know.
+
+## Bot commands and How-to
+For a quick example, feel free to visit this [Twiter thread](https://twitter.com/CrankyPandaMan/status/1579506558869741569).
+
+The premise is fairly simple:
+- Each user has one or more areas
+- Each user can join multiple groups
+- There are commands to schedule a group activity
+
+All commands can be found and explained by running "?help"
+
+## How to self-host
+First, you need to ensure the python packages found in requirements.txt are installed.
+You also need to ensure you have the FreeSerif font installed (so that that the graph can display unicode character "\U00002713"). Once that's all done, modify config.ini to contain your Discord bot token, and your sepush API token. The Discord bot needs the reactions, members and messages intents.
+
+Personally I'm hosting this bot using systemd, and as a consequence of that I have also version controlled a loadsheddingbot.service file. This will likely work for you, though you will need to change the "WorkingDirectory" and "ExecStart" variables accordingly.
