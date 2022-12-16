@@ -141,7 +141,10 @@ def generate_graph(group):
         if file.endswith(".png"):
             os.remove(os.path.join(graph_dir, file))
     plot_name = "{}{}{}.png".format(graph_dir, group, datetime.now())
-    users = db_helpers.get_group_members(db_helpers.get_group_id(group))
+    if group == "ALL":
+        users = db_helpers.get_all_members()
+    else:
+        users = db_helpers.get_group_members(db_helpers.get_group_id(group))
     # 2: Get the areas for each user
     area_names = [db_helpers.get_name("areas", area) for area in db_helpers.get_users_areas(users)]
     # 3: Get the stages for each area
