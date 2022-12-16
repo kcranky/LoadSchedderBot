@@ -8,6 +8,8 @@ WorkingDirectory = /home/pi/LoadSchedderBot
 ExecStart = python3 /home/pi/LoadSchedderBot/discord_bot.py
 User = pi
 Group = pi
- 
+Restart = always
+RestartSec = 60
+
 [Install]
 WantedBy = multi-user.target
