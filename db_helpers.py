@@ -161,6 +161,11 @@ def remove_userdata_pair(user, table, data):
             ((SELECT id FROM users WHERE name = ?), (SELECT id FROM {} WHERE name = ?));".format(table, table[:-1], table)
         _exec_sql(sql, (user, data))
 
+def get_all_members():
+    sql = "SELECT DISTINCT id FROM users;"
+    results =  _exec_sql(sql, {})
+    return [i[0] for i in results]
+
 def get_groups():
     sql = "SELECT name FROM groups;"
     return _exec_sql(sql, ())
@@ -227,14 +232,23 @@ def get_area_users_by_group(area, group):
     return _exec_sql(sql, (area, group,))
 
 def get_group_area_names(group_name):
-    sql = "Select name FROM areas WHERE id in( \
+    if group_name.upper() == "ALL":
+        sql = "Select name FROM areas WHERE id in( \
+            SELECT DISTINCT area_id FROM user_areas \
+            WHERE user_id IN ( \
+                SELECT DISTINCT id FROM users \
+            ) \
+        );"
+        results = _exec_sql(sql, {})
+    else:
+        sql = "Select name FROM areas WHERE id in( \
             SELECT DISTINCT area_id FROM user_areas \
             WHERE user_id IN ( \
                 SELECT user_id FROM user_groups \
                 WHERE group_id = (SELECT id FROM groups WHERE name like (?)) \
             ) \
-     );"
-    results = _exec_sql(sql, (group_name,))
+         );"
+        results = _exec_sql(sql, (group_name,))
     if len(results) != 0:
         return [r[0] for r in results]
     else:
@@ -244,5 +258,5 @@ def get_group_area_names(group_name):
 if __name__ == "__main__":
     # create the test DB and populate with test data
     create_db()
-    populate_test_data()
+    # populate_test_data()
     # TODO: run tests

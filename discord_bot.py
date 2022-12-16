@@ -43,6 +43,7 @@ async def on_ready():
 async def area_search(ctx, *, area: str):
     """
         Search for an area. If it's found, you can add it to your areas.
+        Adding an area to your profile also adds you to the implicit group "all"
     """
     # TODO: Could we make this neater?
     areas = loadshedding_helpers.find_area(area.upper().replace(" ", "+"))
@@ -141,6 +142,7 @@ async def group_join(ctx, *, group: str):
     """
     Join a given group. Creates the group if it does not exist.
     Groups must be a single word/string.
+    You are added to a group "all" by having an area assosciated with your username.
     """
     if group.count(" ") > 0:
         await ctx.send("Group names can't have spaces!")
@@ -154,7 +156,8 @@ async def group_join(ctx, *, group: str):
 @bot.command()
 async def group_list(ctx):
     """
-    List your groups, and potentially delete them
+    List your groups, and potentially delete them.
+    You cannot remove yourself from the "all" group.
     """
     group_list = db_helpers.get_user_data(str(ctx.author), "groups")
     if len(group_list) == 0:
@@ -216,6 +219,7 @@ async def schedule(ctx, group: str, time=None):
     """
     Returns when everyone in the group is available to join.
     If you provide a time in the format HH:MM, you can ask everyone to join you at that time.
+    You can schedule group "all" to see when everyone is available.
     """
     group = group.replace(" ", "")
     # check if the user and the group exist
@@ -262,11 +266,14 @@ async def schedule(ctx, group: str, time=None):
 @bot.command()
 async def timetable(ctx, *, group: str):
     """
-    Returns an image with a breakdown of each member's available times
+    Returns an image with a breakdown of each member's available times.
+    You can use group "all" to see everyone's availability.
     """
     async with ctx.typing():
-        # first, let's check if the group exists
-        if db_helpers.get_group_id(group) != -1:
+        if group.upper() == "ALL":
+            image = helpers.generate_graph("ALL")
+            await ctx.send(file=discord.File(image))
+        elif db_helpers.get_group_id(group) != -1:
             # get the graph
             image = helpers.generate_graph(group)
             await ctx.send(file=discord.File(image))
