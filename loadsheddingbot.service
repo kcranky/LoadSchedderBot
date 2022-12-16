@@ -4,8 +4,8 @@ After = network.target
  
 [Service]
 Type = simple
-WorkingDirectory = /home/pi/DiscordLoadsheddingBot
-ExecStart = python3 /home/pi/DiscordLoadsheddingBot/discord_bot.py
+WorkingDirectory = /home/pi/LoadSchedderBot
+ExecStart = python3 /home/pi/LoadSchedderBot/discord_bot.py
 User = pi
 Group = pi
  
