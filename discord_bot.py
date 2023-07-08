@@ -79,7 +79,7 @@ async def area_search(ctx, *, area: str):
                     index_area_selected = UNICODE_INTS.index(str(reaction_emoji))
                     area_selected = area_list[index_area_selected]
                     db_helpers.insert_userdata_pair(
-                        str(ctx.author), "areas", area_selected["id"])
+                        str(ctx.author.id), "areas", area_selected["id"])
                     await ctx.send("Added {} to your areas, {}!".format(area_selected["name"], str(ctx.author)))
                     return
                 except ValueError:
@@ -91,7 +91,7 @@ async def area_search(ctx, *, area: str):
             index_area_selected = UNICODE_INTS.index(str(reaction_emoji))
             area_selected = area_list[index_area_selected]
             db_helpers.insert_userdata_pair(
-                str(ctx.author), "areas", area_selected["id"])
+                str(ctx.author.id), "areas", area_selected["id"])
             await ctx.send("Added {} to your areas, {}!".format(area_selected["name"], str(ctx.author)))
         except ValueError:
             # User reacted with a bad emoji
@@ -103,7 +103,7 @@ async def area_list(ctx):
     """
     List your areas, and potentially delete them
     """
-    area_list = db_helpers.get_user_data(str(ctx.author), "areas")
+    area_list = db_helpers.get_user_data(str(ctx.author.id), "areas")
     if len(area_list) == 0:
         ctx.send("You have no areas assosciated with your username. Find one to add using \"?area_search\"")
         return
@@ -130,7 +130,7 @@ async def area_list(ctx):
                 index_area_selected = UNICODE_INTS.index(str(reaction_emoji))
                 area_selected = area_list[index_area_selected][0]
                 db_helpers.remove_userdata_pair(
-                    str(ctx.author), "areas", area_selected)
+                    str(ctx.author.id), "areas", area_selected)
                 await ctx.send("Removed {} from your areas, {}!".format(area_selected, str(ctx.author)))
             except ValueError:
                 # User reacted with a bad emoji
@@ -149,7 +149,7 @@ async def group_join(ctx, *, group: str):
         return
     if db_helpers.get_group_id(group.upper()) == -1:
         db_helpers.add_name("groups", group)
-    db_helpers.insert_userdata_pair(str(ctx.author), "groups", group)
+    db_helpers.insert_userdata_pair(str(ctx.author.id), "groups", group)
     await ctx.send("Added {} to your groups, {}!".format(group, str(ctx.author)))
 
 
@@ -159,7 +159,7 @@ async def group_list(ctx):
     List your groups, and potentially delete them.
     You cannot remove yourself from the "all" group.
     """
-    group_list = db_helpers.get_user_data(str(ctx.author), "groups")
+    group_list = db_helpers.get_user_data(str(ctx.author.id), "groups")
     if len(group_list) == 0:
         ctx.send("You have no groups assosciated with your username. Create or join one!")
         return
@@ -187,7 +187,7 @@ async def group_list(ctx):
                 index_group_selected = UNICODE_INTS.index(str(reaction_emoji))
                 group_selected = group_list[index_group_selected][0]
                 group_id = db_helpers.get_group_id(group_selected)
-                db_helpers.remove_userdata_pair(str(ctx.author), "groups", group_selected)
+                db_helpers.remove_userdata_pair(str(ctx.author.id), "groups", group_selected)
                 msg = "Removed {} from your groups, {}!".format(group_selected, str(ctx.author))
                 # see if there are any more members in the group. If not, delete the group
                 if db_helpers.get_group_members(group_id) == -1:
@@ -240,18 +240,15 @@ async def schedule(ctx, group: str, time=None):
             msg += result
 
     if helpers.isTimeFormat(time):
+        ## TODO check if there is only one member in the group
         # Hey
         # get all users in the group:
         uids = db_helpers.get_group_members(db_helpers.get_group_id(group))
         members = [db_helpers.get_name("users", i) for i in uids]
         msg = "Hey there "
-
-        for member in members:
-            name = member[:member.rfind("#")]
-            discriminator = member[member.rfind("#")+1:]
-            user = discord.utils.get(ctx.guild.members, name = name, discriminator = discriminator)
-            if user is not None and user is not ctx.author:
-                msg += f"{user.mention}, "
+        for member in members: # members is a UID now
+            if str(member) != str(ctx.author.id):
+                msg += f"<@{member}>, "
         msg = msg[:-2] + ". {} would like to schedule {} for {} today! RSVP below.".format(ctx.message.author.mention, group, time)
 
         message_sent = await ctx.send(msg)
@@ -269,16 +266,25 @@ async def timetable(ctx, *, group: str):
     Returns an image with a breakdown of each member's available times.
     You can use group "all" to see everyone's availability.
     """
+    # Because we store userIDs in the DB, we also need now to pass through a translation for users, from UID -> nick
+    uid2nick = {}
+
     async with ctx.typing():
+        uids = db_helpers.get_group_members(db_helpers.get_group_id(group))
+        for id in uids:
+            user = await bot.fetch_user(db_helpers.get_name("users", id))
+            uid2nick[user.id] = user.name
+
         if group.upper() == "ALL":
-            image = helpers.generate_graph("ALL")
-            await ctx.send(file=discord.File(image))
+            image = helpers.generate_graph("ALL", uid2nick)
         elif db_helpers.get_group_id(group) != -1:
             # get the graph
-            image = helpers.generate_graph(group)
-            await ctx.send(file=discord.File(image))
+            image = helpers.generate_graph(group, uid2nick)
         else:
             await ctx.send("Group does not exist.")
+            return
+
+        await ctx.send(file=discord.File(image))
 
 @bot.event
 async def on_command_error(ctx, error):
