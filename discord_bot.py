@@ -65,12 +65,12 @@ async def schedule(ctx, group: str, time=None):
         uids = db_helpers.get_group_members(db_helpers.get_group_id(group))
         members = [db_helpers.get_name("users", i) for i in uids]
         if len(members) == 0:
-            member_list = ", ".join(f"<@{member}>" for member in members)
-            msg = "Hey there {}!".format(member_list)
+            msg = "Hey there!"
         else:
             if str(ctx.author.id) in members:
                     members.remove(str(ctx.author.id))
-            msg = "Hey there!"
+            member_list = ", ".join(f"<@{member}>" for member in members)
+            msg = "Hey there {}!".format(member_list)
         msg = msg + "{} would like to schedule {} for {} today! RSVP below.".format(ctx.message.author.mention, group, time)
 
         message_sent = await ctx.send(msg)
