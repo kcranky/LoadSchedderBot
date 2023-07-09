@@ -231,6 +231,14 @@ def get_area_users_by_group(area, group):
     sql = "SELECT name FROM users where id in (" + u_in_a + ") AND (" + u_in_g + ")" 
     return _exec_sql(sql, (area, group,))
 
+def get_users_in_area(area):
+    """
+    Return all users in a givben area
+    """
+    u_in_a = "Select user_id FROM user_areas WHERE area_id IN (SELECT id FROM areas WHERE areas.name = (?))"  ## with area as a param
+    sql = "SELECT name FROM users where id in (" + u_in_a + ")" 
+    return _exec_sql(sql, (area,))
+
 def get_group_area_names(group_name):
     if group_name.upper() == "ALL":
         sql = "Select name FROM areas WHERE id in( \

@@ -63,7 +63,6 @@ def get_hours_out(area):
 
     if current_date not in dates_known:
         # FIXME force an update of the cache and try again
-        print("UNIMPLEMENTED day not in schedule")
         return
 
     # First, we get the particular schedule for the day
@@ -156,18 +155,20 @@ def generate_graph(group, uid2nick):
     area_names = [db_helpers.get_name("areas", area) for area in db_helpers.get_users_areas(users)]
     # 3: Get the stages for each area
     data = {area : get_hours_out(area) for area in area_names}
-
     # data is now held by area. But we want it to be labelled by user
     data_by_user = {}
     for area in data:
-        users_in_area = db_helpers.get_area_users_by_group(area, group)
+        # if group is all, we need to get those users in the area, regardless of group
+        if group == "ALL":
+            users_in_area = db_helpers.get_users_in_area(area)
+        else:
+            users_in_area = db_helpers.get_area_users_by_group(area, group)
         user_list = [users[0] for users in users_in_area]
         for user in user_list:
             if user in data_by_user:
                 data_by_user[user] = combine_schedules([data_by_user[user], data[area]])
             else:
                 data_by_user[user] = data[area]
-
     # now we need to format the data to just be a 2d array, consisting of rowLabels*24 elements
     formatted_data = {}
     rowLabels = [uid2nick[int(key)] for key in data_by_user]

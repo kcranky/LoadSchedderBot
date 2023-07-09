@@ -83,7 +83,7 @@ async def schedule(ctx, group: str, time=None):
     await ctx.send(msg)
 
 @bot.command()
-async def timetable(ctx, *, group: str):
+async def timetable(ctx, *, group: str ="ALL"):
     """
     Returns an image with a breakdown of each member's available times.
     You can use group "all" to see everyone's availability.
@@ -92,28 +92,31 @@ async def timetable(ctx, *, group: str):
     uid2nick = {}
 
     async with ctx.typing():
-        uids = db_helpers.get_group_members(db_helpers.get_group_id(group))
-        for id in uids:
-            user = await bot.fetch_user(db_helpers.get_name("users", id))
-            uid2nick[user.id] = user.name
-
-        if group.upper() == "ALL":
+        if group.upper() == "ALL" or None:
+            uids = db_helpers.get_all_members()
+            for id in uids:
+                user = await bot.fetch_user(db_helpers.get_name("users", id))
+                uid2nick[user.id] = user.name
             image = helpers.generate_graph("ALL", uid2nick)
         elif db_helpers.get_group_id(group) != -1:
+            uids = db_helpers.get_group_members(db_helpers.get_group_id(group.upper()))
+            for id in uids:
+                user = await bot.fetch_user(db_helpers.get_name("users", id))
+                uid2nick[user.id] = user.name
             # get the graph
-            image = helpers.generate_graph(group, uid2nick)
+            image = helpers.generate_graph(group.upper(), uid2nick)
         else:
             await ctx.send("Group does not exist.")
             return
 
         await ctx.send(file=discord.File(image))
 
-@bot.event
-async def on_command_error(ctx, error):
-    await ctx.send(f"An error occured: {str(error)}")
+# @bot.event
+# async def on_command_error(ctx, error):
+#     await ctx.send(f"An error occured: {error}")
 
 
 if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read("config.ini")
-    bot.run(config["Tokens"]["discord_bot"])
+    bot.run(config["Tokens"]["discord_bot"], root_logger=True)
