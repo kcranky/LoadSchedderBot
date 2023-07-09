@@ -111,9 +111,9 @@ async def timetable(ctx, *, group: str ="ALL"):
 
         await ctx.send(file=discord.File(image))
 
-# @bot.event
-# async def on_command_error(ctx, error):
-#     await ctx.send(f"An error occured: {error}")
+@bot.event
+async def on_command_error(ctx, error):
+    await ctx.send(f"An error occured: {error}")
 
 
 if __name__ == "__main__":
