@@ -19,10 +19,6 @@ description = '''A bot to help you schedule games.
 
 For help, type ?help'''
 
-TIMEOUT = 60.0
-UNICODE_INTS = ["{}\N{COMBINING ENCLOSING KEYCAP}".format(num) for num in range(0, 10)]
-
-
 intents = discord.Intents.default()
 intents.reactions = True
 intents.message_content = True
@@ -31,188 +27,14 @@ intents.members = True
 help_command = commands.DefaultHelpCommand(no_category = 'Commands', show_parameter_descriptions=False)
 bot = commands.Bot(command_prefix='?',description=description, intents=intents, help_command = help_command)
 
-
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user} (ID: {bot.user.id})')
     print('------')
+    for cog_file in helpers.COGS_DIR.glob("*.py"):
+            if cog_file != "__init.py__":
+                await bot.load_extension(f"cogs.{cog_file.name[:-3]}")
     db_helpers.create_db()
-
-
-@bot.command()
-async def area_search(ctx, *, area: str):
-    """
-        Search for an area. If it's found, you can add it to your areas.
-        Adding an area to your profile also adds you to the implicit group "all"
-    """
-    # TODO: Could we make this neater?
-    areas = loadshedding_helpers.find_area(area.upper().replace(" ", "+"))
-    area_list = areas["areas"]
-    if len(area_list) != 0:
-        message = "I found the following areas! React with yours to add it to your profile.\n"
-        for i in range(min(9, len(area_list))):
-            area = area_list[i]
-            message += UNICODE_INTS[i] + " " + area["name"] + " - " + area["region"] + "\n"
-    else:
-        message = "I found no areas matching {}, sorry!".format(area)
-        await ctx.send(message)
-        return
-
-    message_sent = await ctx.send(message)
-    # we've sent the message, now add the reactions
-    if len(area_list) != 0:
-        for i in range(min(9, len(area_list))):
-            await message_sent.add_reaction(UNICODE_INTS[i])
-
-    def check(reaction, user):
-        if user == ctx.author:
-            return str(reaction.emoji)
-
-    try:
-        reaction_emoji, user = await bot.wait_for('reaction_add', timeout=TIMEOUT, check=check)
-    except asyncio.TimeoutError:
-        # if we timeout here, let's check if the user has already reacted before we get salty
-        cache_msg = discord.utils.get(bot.cached_messages, id=message_sent.id)
-        for reaction in cache_msg.reactions:
-            if reaction.count > 1:
-                try:
-                    index_area_selected = UNICODE_INTS.index(str(reaction_emoji))
-                    area_selected = area_list[index_area_selected]
-                    db_helpers.insert_userdata_pair(
-                        str(ctx.author.id), "areas", area_selected["id"])
-                    await ctx.send("Added {} to your areas, {}!".format(area_selected["name"], str(ctx.author)))
-                    return
-                except ValueError:
-                    # something went horribly wrong
-                    return
-        await ctx.send("Fine then, ignore me >:(")
-    else:
-        try:
-            index_area_selected = UNICODE_INTS.index(str(reaction_emoji))
-            area_selected = area_list[index_area_selected]
-            db_helpers.insert_userdata_pair(
-                str(ctx.author.id), "areas", area_selected["id"])
-            await ctx.send("Added {} to your areas, {}!".format(area_selected["name"], str(ctx.author)))
-        except ValueError:
-            # User reacted with a bad emoji
-            await ctx.send("Can't follow instructions, eh? You'll have to ask me again.")
-
-
-@bot.command()
-async def area_list(ctx):
-    """
-    List your areas, and potentially delete them
-    """
-    area_list = db_helpers.get_user_data(str(ctx.author.id), "areas")
-    if len(area_list) == 0:
-        ctx.send("You have no areas assosciated with your username. Find one to add using \"?area_search\"")
-        return
-    else:
-        message = "Here are your areas! Remove one by reacting with it's number.\n"
-        for i in range(min(9, len(area_list))):
-            message += UNICODE_INTS[i] + " " + area_list[i][0] + "\n"
-        message_sent = await ctx.send(message)
-
-        for i in range(min(9, len(area_list))):
-            await message_sent.add_reaction(UNICODE_INTS[i])
-
-        def check(reaction, user):
-            if user == ctx.author:
-                return str(reaction.emoji)
-
-        try:
-            reaction_emoji, user = await bot.wait_for('reaction_add', timeout=TIMEOUT/2, check=check)
-        except asyncio.TimeoutError:
-            # if we timeout here, let's check if the user has already reacted before we get salty
-            await ctx.send("None of your areas have been removed")
-        else:
-            try:
-                index_area_selected = UNICODE_INTS.index(str(reaction_emoji))
-                area_selected = area_list[index_area_selected][0]
-                db_helpers.remove_userdata_pair(
-                    str(ctx.author.id), "areas", area_selected)
-                await ctx.send("Removed {} from your areas, {}!".format(area_selected, str(ctx.author)))
-            except ValueError:
-                # User reacted with a bad emoji
-                await ctx.send("Can't follow instructions, eh? You'll have to ask me again.")
-
-
-@bot.command()
-async def group_join(ctx, *, group: str):
-    """
-    Join a given group. Creates the group if it does not exist.
-    Groups must be a single word/string.
-    You are added to a group "all" by having an area assosciated with your username.
-    """
-    if group.count(" ") > 0:
-        await ctx.send("Group names can't have spaces!")
-        return
-    if db_helpers.get_group_id(group.upper()) == -1:
-        db_helpers.add_name("groups", group)
-    db_helpers.insert_userdata_pair(str(ctx.author.id), "groups", group)
-    await ctx.send("Added {} to your groups, {}!".format(group, str(ctx.author)))
-
-
-@bot.command()
-async def group_list(ctx):
-    """
-    List your groups, and potentially delete them.
-    You cannot remove yourself from the "all" group.
-    """
-    group_list = db_helpers.get_user_data(str(ctx.author.id), "groups")
-    if len(group_list) == 0:
-        ctx.send("You have no groups assosciated with your username. Create or join one!")
-        return
-    else:
-        message = "Here are your groups! Remove one by reacting with it's number.\n"
-        for i in range(min(9, len(group_list))):
-            message += UNICODE_INTS[i] + " " + group_list[i][0] + "\n"
-        message_sent = await ctx.send(message)
-
-        for i in range(min(9, len(group_list))):
-            await message_sent.add_reaction(UNICODE_INTS[i])
-
-        def check(reaction, user):
-            if user == ctx.author:
-                return str(reaction.emoji)
-
-        try:
-            reaction_emoji, user = await bot.wait_for('reaction_add', timeout=TIMEOUT/2, check=check)
-        except asyncio.TimeoutError:
-            # await ctx.send("None of your groups have been removed")
-            # If nothing happens, then nothing happens. We don't need to tell the user that nothing happens
-            pass
-        else:
-            try:
-                index_group_selected = UNICODE_INTS.index(str(reaction_emoji))
-                group_selected = group_list[index_group_selected][0]
-                group_id = db_helpers.get_group_id(group_selected)
-                db_helpers.remove_userdata_pair(str(ctx.author.id), "groups", group_selected)
-                msg = "Removed {} from your groups, {}!".format(group_selected, str(ctx.author))
-                # see if there are any more members in the group. If not, delete the group
-                if db_helpers.get_group_members(group_id) == -1:
-                    db_helpers.remove_group(group_id)
-                    msg += "\nYou were also the last member, so I removed the group, too."
-                await ctx.send(msg)
-            except ValueError:
-                # User reacted with a bad emoji
-                await ctx.send("Can't follow instructions, eh? You'll have to ask me again.")
-
-
-@bot.command()
-async def group_list_all(ctx):
-    """
-    Returns all groups currently available
-    """
-    msg = ""
-    groups = db_helpers.get_groups()
-    if len(groups) > 0:
-        for i, g in enumerate(groups):
-            msg += "{}: {}\n".format(i + 1, g[0])
-    else:
-        msg = "No groups found! Add one with the \"?group_create\" command."
-    await ctx.send(msg)
-
 
 @bot.command()
 async def schedule(ctx, group: str, time=None):
@@ -240,16 +62,16 @@ async def schedule(ctx, group: str, time=None):
             msg += result
 
     if helpers.isTimeFormat(time):
-        ## TODO check if there is only one member in the group
-        # Hey
-        # get all users in the group:
         uids = db_helpers.get_group_members(db_helpers.get_group_id(group))
         members = [db_helpers.get_name("users", i) for i in uids]
-        msg = "Hey there "
-        for member in members: # members is a UID now
-            if str(member) != str(ctx.author.id):
-                msg += f"<@{member}>, "
-        msg = msg[:-2] + ". {} would like to schedule {} for {} today! RSVP below.".format(ctx.message.author.mention, group, time)
+        if len(members) == 0:
+            member_list = ", ".join(f"<@{member}>" for member in members)
+            msg = "Hey there {}!".format(member_list)
+        else:
+            if str(ctx.author.id) in members:
+                    members.remove(str(ctx.author.id))
+            msg = "Hey there!"
+        msg = msg + "{} would like to schedule {} for {} today! RSVP below.".format(ctx.message.author.mention, group, time)
 
         message_sent = await ctx.send(msg)
         await message_sent.add_reaction('\N{THUMBS UP SIGN}')
