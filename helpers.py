@@ -13,7 +13,7 @@ BASE_DIR = pathlib.Path(__file__).parent
 COGS_DIR = pathlib.Path.joinpath(BASE_DIR, "cogs")
 CHECK = "\U00002713"
 UNICODE_INTS = ["{}\N{COMBINING ENCLOSING KEYCAP}".format(num) for num in range(0, 10)]
-TIMEOUT = 60.0/4
+TIMEOUT = 30.0
 
 def get_stage_dict(area_region):
     """
