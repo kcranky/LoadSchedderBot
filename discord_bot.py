@@ -71,7 +71,7 @@ async def schedule(ctx, group: str, time=None):
                     members.remove(str(ctx.author.id))
             member_list = ", ".join(f"<@{member}>" for member in members)
             msg = "Hey there {}!".format(member_list)
-        msg = msg + "{} would like to schedule {} for {} today! RSVP below.".format(ctx.message.author.mention, group, time)
+        msg = msg + " {} would like to schedule {} for {} today! RSVP below.".format(ctx.message.author.mention, group, time)
 
         message_sent = await ctx.send(msg)
         await message_sent.add_reaction('\N{THUMBS UP SIGN}')
