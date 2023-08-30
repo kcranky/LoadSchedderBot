@@ -27,7 +27,7 @@ class Group(commands.Cog):
         if db_helpers.get_group_id(group.upper()) == -1:
             db_helpers.add_name("groups", group)
         db_helpers.insert_userdata_pair(str(ctx.author.id), "groups", group)
-        await ctx.send("Added {} to your groups, {}!".format(group, str(ctx.author)))
+        await ctx.message.add_reaction('\N{THUMBS UP SIGN}')
 
     @group.command()
     async def list(self, ctx):
