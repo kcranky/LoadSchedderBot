@@ -5,7 +5,7 @@ import loadshedding_helpers
 import os
 import matplotlib.pyplot as plt
 
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import time
 import pathlib
 
@@ -204,7 +204,7 @@ def generate_graph(group, uid2nick):
 
     return plot_name
 
-def isTimeFormat(input):
+def is_time_format(input):
     if input is None:
         return False
     try:
@@ -212,6 +212,24 @@ def isTimeFormat(input):
         return True
     except ValueError:
         return False
+
+def to_tz_aware_datetime(input):
+    if is_time_format(input):
+        # Everyone lives in UTC+2, so this will never have to be updated.
+        tzinfo = timezone(timedelta(hours=2))
+        now = datetime.now()
+        scheduled_time = datetime.strptime(input, '%H:%M').replace(tzinfo=tzinfo).time()
+        return datetime(
+            now.year,
+            now.month,
+            now.day,
+            scheduled_time.hour,
+            scheduled_time.minute,
+            tzinfo=scheduled_time.tzinfo
+        ).astimezone()
+    else:
+        raise "Scheduled time string can't be empty"
+
 
 if __name__ == "__main__":
     # print(stringify_can_join(schedule_group("mw2")))
