@@ -7,8 +7,13 @@ import matplotlib.pyplot as plt
 
 from datetime import datetime
 import time
+import pathlib
 
+BASE_DIR = pathlib.Path(__file__).parent
+COGS_DIR = pathlib.Path.joinpath(BASE_DIR, "cogs")
 CHECK = "\U00002713"
+UNICODE_INTS = ["{}\N{COMBINING ENCLOSING KEYCAP}".format(num) for num in range(0, 10)]
+TIMEOUT = 30.0
 
 def get_stage_dict(area_region):
     """
@@ -58,7 +63,6 @@ def get_hours_out(area):
 
     if current_date not in dates_known:
         # FIXME force an update of the cache and try again
-        print("UNIMPLEMENTED day not in schedule")
         return
 
     # First, we get the particular schedule for the day
@@ -130,40 +134,44 @@ def schedule_group(group):
     return combine_schedules(res)
 
 
-def generate_graph(group):
+# TODO: This will need to now look up user IDs in text
+def generate_graph(group, uid2nick):
     # So what do we want to acheive?
     """
     Generate a human-readable graph to determine non-optimal schedule times
     """
     # start by removing all previous pngs from the graph location
-    graph_dir = "images/generated_graphs/"
+    graph_dir = os.path.join(BASE_DIR, "images", "generated_graphs")
     for file in os.listdir(graph_dir):
         if file.endswith(".png"):
             os.remove(os.path.join(graph_dir, file))
-    plot_name = "{}{}{}.png".format(graph_dir, group, datetime.now())
+    plot_name = "{}{}{}.png".format(graph_dir, group, str(datetime.now()).replace(":", "-"))
     if group == "ALL":
         users = db_helpers.get_all_members()
     else:
         users = db_helpers.get_group_members(db_helpers.get_group_id(group))
+    # set users to be names
     # 2: Get the areas for each user
     area_names = [db_helpers.get_name("areas", area) for area in db_helpers.get_users_areas(users)]
     # 3: Get the stages for each area
     data = {area : get_hours_out(area) for area in area_names}
-
     # data is now held by area. But we want it to be labelled by user
     data_by_user = {}
     for area in data:
-        users_in_area = db_helpers.get_area_users_by_group(area, group)
+        # if group is all, we need to get those users in the area, regardless of group
+        if group == "ALL":
+            users_in_area = db_helpers.get_users_in_area(area)
+        else:
+            users_in_area = db_helpers.get_area_users_by_group(area, group)
         user_list = [users[0] for users in users_in_area]
         for user in user_list:
             if user in data_by_user:
                 data_by_user[user] = combine_schedules([data_by_user[user], data[area]])
             else:
                 data_by_user[user] = data[area]
-
     # now we need to format the data to just be a 2d array, consisting of rowLabels*24 elements
     formatted_data = {}
-    rowLabels = [key for key in data_by_user]
+    rowLabels = [uid2nick[int(key)] for key in data_by_user]
     current_hour = int(datetime.now().hour)
     for key in data_by_user:
         formatted_data[key] = [data_by_user[key][k] for k in range(current_hour, 24)]
@@ -172,11 +180,11 @@ def generate_graph(group):
     for key in formatted_data:
         colors[key] = ["chartreuse" if element == True else "salmon" for element in formatted_data[key]]
         formatted_data[key] = [CHECK if element == True else "X" for element in formatted_data[key]]
-    plot_data = [formatted_data[key] for key in rowLabels]
-    cell_colors = [colors[key] for key in rowLabels]
+    plot_data = [formatted_data[key] for key in data_by_user]
+    cell_colors = [colors[key] for key in data_by_user]
 
     # Set up and plot the timetable
-    plt.rcParams["font.family"] = "FreeSerif"
+    # plt.rcParams["font.family"] = "FreeSerif"
     colLabels = ["{}h".format(i) for i in range(current_hour, 24)]
     fig, ax = plt.subplots()
     ax.set_axis_off() 
@@ -189,7 +197,7 @@ def generate_graph(group):
         colColours =["palegreen"] * 24,
     cellLoc ='center',
     loc ='upper left')
-    plt.suptitle('Advanced schedule for {} for {}'.format(group, datetime.now().date()), 
+    plt.suptitle('Schedule for {} for {}'.format(group, datetime.now().date()), 
              fontweight ="bold")
     ax.set_title("Generated at {}".format(datetime.now().strftime("%H:%M:%S")), fontweight="bold", fontsize=10)
     plt.savefig("{}".format(plot_name), bbox_inches='tight')
@@ -206,4 +214,5 @@ def isTimeFormat(input):
         return False
 
 if __name__ == "__main__":
-    print(stringify_can_join(schedule_group("mw2")))
+    # print(stringify_can_join(schedule_group("mw2")))
+    generate_graph("dota")

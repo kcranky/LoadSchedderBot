@@ -2,7 +2,7 @@
 
 LoadSchedder is a Discord bot written in Python designed to collate loadshedding schedules of multiple users. It makes use of Discord.py and the [sepush API](https://documenter.getpostman.com/view/1296288/UzQuNk3E).
 
-I'm not currently hosting this for the public, and I don't currently have intentions to unless the sepush guys get back to me as I only get 50 API requests a day. You're welcome to self-host it (basic instructions below) but note that support may be limited.
+I'm not currently hosting this for the public, and I don't currently have intentions to. You're welcome to self-host it (basic instructions below) but note that support may be limited. To get a sepush API token, you can visit [this site](https://eskomsepush.gumroad.com/l/api).
 
 If you do end up using this, or have ideas on how to improve it, please let me know.
 
