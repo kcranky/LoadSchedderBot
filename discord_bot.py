@@ -62,8 +62,12 @@ async def schedule(ctx, group: str, time=None):
             msg += result
 
     if helpers.isTimeFormat(time):
-        uids = db_helpers.get_group_members(db_helpers.get_group_id(group))
-        members = [db_helpers.get_name("users", i) for i in uids]
+        if group.upper() == "ALL":
+            uids = db_helpers.get_all_members()
+            members = [db_helpers.get_name("users", i) for i in uids]
+        else:
+            uids = db_helpers.get_group_members(db_helpers.get_group_id(group))
+            members = [db_helpers.get_name("users", i) for i in uids]
         if len(members) == 0:
             msg = "Hey there!"
         else:
