@@ -21,3 +21,6 @@ First, you need to ensure the python packages found in requirements.txt are inst
 You also need to ensure you have the FreeSerif font installed (so that that the graph can display unicode character "\U00002713"). Once that's all done, modify config.ini to contain your Discord bot token, and your sepush API token. The Discord bot needs the reactions, members and messages intents.
 
 Personally I'm hosting this bot using systemd, and as a consequence of that I have also version controlled a loadsheddingbot.service file. This will likely work for you, though you will need to change the "WorkingDirectory" and "ExecStart" variables accordingly.
+
+## Acknowledgements
+Thanks to [BrydonLeonard](https://github.com/BrydonLeonard) for doing the inital work on scheduling Discord-native timing events.

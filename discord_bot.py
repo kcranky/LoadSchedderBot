@@ -7,6 +7,7 @@ import asyncio
 import loadshedding_helpers
 import db_helpers
 import helpers
+import datetime
 
 """
 discord_bot
@@ -14,6 +15,9 @@ discord_bot
 TODO: Look at command groups rather than the underscores as I have them now
 TODO: Need a command to completely remove groups from the db
 """
+
+config = configparser.ConfigParser()
+config.read("config.ini")
 
 description = '''A bot to help you schedule games.
 
@@ -23,6 +27,7 @@ intents = discord.Intents.default()
 intents.reactions = True
 intents.message_content = True
 intents.members = True
+intents.guild_scheduled_events = True
 
 help_command = commands.DefaultHelpCommand(no_category = 'Commands', show_parameter_descriptions=False)
 bot = commands.Bot(command_prefix='?',description=description, intents=intents, help_command = help_command)
@@ -52,7 +57,7 @@ async def schedule(ctx, group: str, time=None):
         return
 
     # If there's just one parameter
-    if time is None or helpers.isTimeFormat(time) == False:
+    if time is None or helpers.is_time_format(time) == False:
         hours_dict = helpers.schedule_group(group)
         result = helpers.stringify_can_join(hours_dict)
         if result == "[]":
@@ -61,7 +66,7 @@ async def schedule(ctx, group: str, time=None):
             msg = "You can schedule {} at these times today: \n".format(group)
             msg += result
 
-    if helpers.isTimeFormat(time):
+    if helpers.is_time_format(time):
         if group.upper() == "ALL":
             uids = db_helpers.get_all_members()
             members = [db_helpers.get_name("users", i) for i in uids]
@@ -69,17 +74,33 @@ async def schedule(ctx, group: str, time=None):
             uids = db_helpers.get_group_members(db_helpers.get_group_id(group))
             members = [db_helpers.get_name("users", i) for i in uids]
         if len(members) == 0:
-            msg = "Hey there!"
+            msg_intro = "Hey there!"
         else:
             if str(ctx.author.id) in members:
                     members.remove(str(ctx.author.id))
             member_list = ", ".join(f"<@{member}>" for member in members)
-            msg = "Hey there {}!".format(member_list)
-        msg = msg + " {} would like to schedule {} for {} today! RSVP below.".format(ctx.message.author.mention, group, time)
+            msg_intro = f"Hey there {member_list}!"
 
-        message_sent = await ctx.send(msg)
-        await message_sent.add_reaction('\N{THUMBS UP SIGN}')
-        await message_sent.add_reaction('\N{THUMBS DOWN SIGN}')
+        event: discord.ScheduledEvent = await ctx.guild.create_scheduled_event(
+            name=f"{group}",
+            start_time=helpers.to_tz_aware_datetime(time),
+            end_time=(helpers.to_tz_aware_datetime(time) + datetime.timedelta(hours=2)),
+            privacy_level=discord.PrivacyLevel.guild_only,
+            location = "Online",
+            entity_type=discord.EntityType.external
+        )
+
+        try:
+            invite: discord.Invite = await ctx.channel.create_invite(temporary=True)
+            invite_link = f"{invite}?event={event.id}"
+        except:
+            invite_link = ("The bot failed to create an invite link. You'll need to open the event manually to mark "
+                           "yourself interested")
+
+        msg = f"{msg_intro} {ctx.message.author.mention} would like to schedule {group} for {time} today!\n{invite_link}"
+
+        await ctx.send(msg)
+
         return
     elif time != None:
         msg = "I couldn't understand your time format, but y" + msg[1:]
@@ -121,6 +142,4 @@ async def on_command_error(ctx, error):
 
 
 if __name__ == "__main__":
-    config = configparser.ConfigParser()
-    config.read("config.ini")
     bot.run(config["Tokens"]["discord_bot"], root_logger=True)
