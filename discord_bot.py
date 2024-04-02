@@ -97,7 +97,7 @@ async def schedule(ctx, group: str, time=None):
             invite_link = ("The bot failed to create an invite link. You'll need to open the event manually to mark "
                            "yourself interested")
 
-        msg = f"{msg_intro} {ctx.message.author.mention} would like to schedule {group} for {time} today!\n{invite_link}"
+        msg = f"{msg_intro} {ctx.message.author.mention} would like to schedule {group}!\nCheck the Discord event for when it's happening! \n{invite_link}"
 
         await ctx.send(msg)
 
