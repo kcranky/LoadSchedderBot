@@ -222,7 +222,7 @@ def to_tz_aware_datetime(time_in, timezone_str):
     if is_time_format(time_in):
         # Sub in the other required datetime fields
         scheduled_time = datetime.strptime(time_in, '%H:%M')
-        result = datetime.now.replace(
+        result = datetime.now().replace(
             hour = scheduled_time.hour,
             minute=scheduled_time.minute,
             second=0,
