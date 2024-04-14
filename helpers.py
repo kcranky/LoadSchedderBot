@@ -5,8 +5,9 @@ import loadshedding_helpers
 import os
 import matplotlib.pyplot as plt
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 import time
+import pytz
 import pathlib
 
 BASE_DIR = pathlib.Path(__file__).parent
@@ -211,22 +212,28 @@ def is_time_format(input):
         return True
     except ValueError:
         return False
-    
 
-def to_tz_aware_datetime(input):
-    if is_time_format(input):
-        # Everyone lives in UTC+2, so this will never have to be updated.
-        tzinfo = timezone(timedelta(hours=2))
-        now = datetime.now()
-        scheduled_time = datetime.strptime(input, '%H:%M').replace(tzinfo=tzinfo).time()
-        return datetime(
-            now.year,
-            now.month,
-            now.day,
-            scheduled_time.hour,
-            scheduled_time.minute,
-            tzinfo=scheduled_time.tzinfo
-        ).astimezone()
+
+def to_tz_aware_datetime(time_in, timezone_str):
+    """
+    We assume the time that the user passes in, is in the timezone defined in timezxone_str
+    We need to convert this time to a UTC time in order to schedule the event
+    """
+    if is_time_format(time_in):
+        # Sub in the other required datetime fields
+        scheduled_time = datetime.strptime(time_in, '%H:%M')
+        result = datetime.now.replace(
+            hour = scheduled_time.hour,
+            minute=scheduled_time.minute,
+            second=0,
+            microsecond=0
+        )
+        # We set the TZ using localize as timezone offsets have changed through the years. Read more:
+        # https://bytes.com/topic/python/answers/676275-pytz-giving-incorrect-offset-timezone
+        timezone = pytz.timezone(timezone_str)
+        result = timezone.localize(result)
+        # Discord events require a UTC time
+        return result.astimezone(pytz.UTC)
     else:
         raise "Scheduled time string can't be empty"
 

@@ -81,10 +81,13 @@ async def schedule(ctx, group: str, time=None):
             member_list = ", ".join(f"<@{member}>" for member in members)
             msg_intro = f"Hey there {member_list}!"
 
+        # For now, we work in the default timezone specified in the config
+        timezone = config["Timezone"]["default"]
+        start_time = helpers.to_tz_aware_datetime(time, timezone)
         event: discord.ScheduledEvent = await ctx.guild.create_scheduled_event(
             name=f"{group}",
-            start_time=helpers.to_tz_aware_datetime(time),
-            end_time=(helpers.to_tz_aware_datetime(time) + datetime.timedelta(hours=2)),
+            start_time=start_time,
+            end_time=(start_time + datetime.timedelta(hours=2)),
             privacy_level=discord.PrivacyLevel.guild_only,
             location = "Online",
             entity_type=discord.EntityType.external
