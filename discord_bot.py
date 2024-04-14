@@ -38,8 +38,10 @@ async def on_ready():
     print('------')
     for cog_file in helpers.COGS_DIR.glob("*.py"):
             if cog_file != "__init.py__":
+                print(f"loading cog: {cog_file}")
                 await bot.load_extension(f"cogs.{cog_file.name[:-3]}")
     db_helpers.create_db()
+    print("Startup complete.")
 
 @bot.command()
 async def schedule(ctx, group: str, time=None):
@@ -82,7 +84,9 @@ async def schedule(ctx, group: str, time=None):
             msg_intro = f"Hey there {member_list}!"
 
         # For now, we work in the default timezone specified in the config
-        timezone = config["Timezone"]["default"]
+        timezone = db_helpers.get_user_timezone(str(ctx.author.id))
+        if timezone is None:
+            timezone = config["Timezone"]["default"]
         start_time = helpers.to_tz_aware_datetime(time, timezone)
         event: discord.ScheduledEvent = await ctx.guild.create_scheduled_event(
             name=f"{group}",
@@ -139,9 +143,9 @@ async def timetable(ctx, *, group: str ="ALL"):
 
         await ctx.send(file=discord.File(image))
 
-@bot.event
-async def on_command_error(ctx, error):
-    await ctx.send(f"An error occured: {error}")
+# @bot.event
+# async def on_command_error(ctx, error):
+#     await ctx.send(f"An error occured: {error}")
 
 
 if __name__ == "__main__":

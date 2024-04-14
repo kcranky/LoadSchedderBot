@@ -42,6 +42,11 @@ def _create_tables(conn):
                 group_id INTEGER,
                 CONSTRAINT fk_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
                 CONSTRAINT fk_groups FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE ON UPDATE CASCADE);""")
+    # Create a timezone table. We just store the user's ID and their timezone
+    conn.execute("""CREATE TABLE user_timezones(
+                user_id INTEGER PRIMARY KEY,
+                timezone TEXT,
+                CONSTRAINT fk_users FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE;""")
 
 
 def populate_test_data():
@@ -261,6 +266,24 @@ def get_group_area_names(group_name):
         return [r[0] for r in results]
     else:
         return []
+
+
+def set_user_timezone(user, timezone_str):
+    # At this point we've already validated the data
+    sql = "INSERT INTO user_timezones (user_id, timezone) \
+            VALUES ((SELECT id FROM users WHERE name = ?), ?) \
+            ON CONFLICT(user_id) DO UPDATE SET timezone=?;"
+    _exec_sql(sql, (user, timezone_str, timezone_str))
+
+
+def get_user_timezone(user):
+    # At this point we've already validated the data
+    sql = "SELECT timezone FROM user_timezones WHERE user_id = (SELECT id FROM users WHERE name = ?);"
+    result = _exec_sql(sql, (user, ))
+    if len(result) != 0:
+        return result[0][0]
+    else:
+        return None
 
 
 if __name__ == "__main__":

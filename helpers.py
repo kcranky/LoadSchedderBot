@@ -9,6 +9,7 @@ from datetime import datetime
 import time
 import pytz
 import pathlib
+import configparser
 
 BASE_DIR = pathlib.Path(__file__).parent
 COGS_DIR = pathlib.Path.joinpath(BASE_DIR, "cogs")
@@ -211,6 +212,15 @@ def is_time_format(input):
         time.strptime(input, '%H:%M')
         return True
     except ValueError:
+        return False
+
+def is_timezone(timezone_str):
+    if timezone_str is None:
+        return False
+    try:
+        pytz.timezone(timezone_str)
+        return True
+    except pytz.UnknownTimeZoneError:
         return False
 
 

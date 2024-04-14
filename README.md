@@ -13,6 +13,7 @@ The premise is fairly simple:
 - Each user has one or more areas which dictates their loadschedding schedule.
 - Each user can join multiple groups.
 - There are commands to schedule a group activity, which considers when users within that group are loadshedding.
+- Users not located in the default timezone can set a pytz timezone, and the bot will interpret their schedule as being in their own timezone and adjust accordingly.
 
 All commands can be found and explained by running "?help"
 
