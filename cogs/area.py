@@ -12,7 +12,7 @@ class Area(commands.Cog):
     @commands.group()
     async def area(self, ctx):
         if ctx.invoked_subcommand is None:
-            await ctx.send("No command selected")
+            await ctx.send_help(ctx.command)
 
     @area.command()
     async def list(self, ctx):

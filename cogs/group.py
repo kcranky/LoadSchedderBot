@@ -12,7 +12,7 @@ class Group(commands.Cog):
     @commands.group()
     async def group(self, ctx):
         if ctx.invoked_subcommand is None:
-            await ctx.send("No command selected")
+            await ctx.send_help(ctx.command)
 
     @group.command()
     async def join(self, ctx, *, group: str):

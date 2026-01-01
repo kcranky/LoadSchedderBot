@@ -1,7 +1,10 @@
 from discord.ext import commands
 import db_helpers
 import helpers
+import configparser
 
+config = configparser.ConfigParser()
+config.read("config.ini")
 
 class Timezone(commands.Cog):
     def __init__(self, bot):
@@ -10,11 +13,14 @@ class Timezone(commands.Cog):
     @commands.group()
     async def timezone(self, ctx):
         if ctx.invoked_subcommand is None:
-            # TODO print help instead
-            await ctx.send("No command selected")
+            await ctx.send_help(ctx.command)
 
     @timezone.command()
     async def set(self, ctx, *, timezone_str: str):
+        """
+        Set a timezone for your user.
+        Must be in pytz format: https://gist.github.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568
+        """
         if timezone_str is not None and helpers.is_timezone(timezone_str):
             # we can now add the timezone for the user
             db_helpers.set_user_timezone(str(ctx.author.id), timezone_str)
@@ -28,7 +34,7 @@ class Timezone(commands.Cog):
         if result is not None:
             msg = f"Your timezone is currently {result}."
         else:
-            msg = "Your timezone is not set. You're currently using the default timezone."
+            msg = f"Your timezone is not set. You're currently using the default timezone of {config["Timezone"]["default"]}."
         await ctx.send(msg)
 
 
