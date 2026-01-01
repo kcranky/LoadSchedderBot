@@ -4,13 +4,6 @@ After = network.target
  
 [Service]
 Type = simple
-<<<<<<< HEAD
-WorkingDirectory = /home/pi/DiscordLoadsheddingBot
-ExecStart = python3 /home/pi/DiscordLoadsheddingBot/discord_bot.py
-User = pi
-Group = pi
- 
-=======
 WorkingDirectory = /home/pi/LoadSchedderBot
 ExecStart = python3 /home/pi/LoadSchedderBot/discord_bot.py
 User = pi
@@ -18,6 +11,5 @@ Group = pi
 Restart = always
 RestartSec = 60
 
->>>>>>> public
 [Install]
 WantedBy = multi-user.target
