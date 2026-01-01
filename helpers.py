@@ -16,6 +16,7 @@ COGS_DIR = pathlib.Path.joinpath(BASE_DIR, "cogs")
 CHECK = "\U00002713"
 UNICODE_INTS = ["{}\N{COMBINING ENCLOSING KEYCAP}".format(num) for num in range(0, 10)]
 TIMEOUT = 30.0
+LETTER_EMOJIS = [chr(0x1F1E6 + i) for i in range(26)]
 
 def get_stage_dict(area_region):
     """
