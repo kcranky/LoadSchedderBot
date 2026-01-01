@@ -130,7 +130,9 @@ def get_name(table, id):
     Return the name of an ID for a given table
     """
     sql = "Select name from {} where id = (?);".format(table)
-    return _exec_sql(sql, (id,))[0][0]
+    result = _exec_sql(sql, (id,))
+    if result != []:
+        return result[0][0]
 
 
 def _check_userdatapair_exists(user, table, value):
@@ -169,7 +171,7 @@ def remove_userdata_pair(user, table, data):
 def get_all_members():
     sql = "SELECT DISTINCT id FROM users;"
     results =  _exec_sql(sql, {})
-    return [i[0] for i in results]
+    return [i[0] for i in results if i[0] is not None]
 
 def get_groups():
     sql = "SELECT name FROM groups;"
@@ -211,7 +213,7 @@ def get_group_members(group_id):
     results = _exec_sql(
         "Select user_id from user_groups where group_id = (?)", (group_id,))
     if len(results) != 0:
-        return [i[0] for i in results]
+        return [i[0] for i in results if i[0] is not None]
     else:
         return -1
 
@@ -223,7 +225,7 @@ def get_users_areas(user_id_array):
     results = _exec_sql("SELECT DISTINCT area_id FROM user_areas WHERE user_id IN ({})".format(
         ','.join('?'*len(user_id_array))), user_id_array)
     if len(results) != 0:
-        return [i[0] for i in results]
+        return [i[0] for i in results if i[0] is not None]
     else:
         return -1
 
