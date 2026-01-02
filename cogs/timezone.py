@@ -31,13 +31,14 @@ class Timezone(commands.Cog):
 
     @timezone.command()
     async def get(self, ctx):
+        msg = ""
         result = db_helpers.get_user_timezone(str(ctx.author.id))
         if result is None:
-            msg = f"Your timezone is not set. You're currently using the default timezone of {config["Timezone"]["default"]}."
+            msg = f"Your timezone is not set. You're currently using the default timezone of {config['Timezone']['default']}."
             await ctx.send(msg)
             return
         else:
-            msg = f"Your timezone is currently {result}. \n React with {helpers.CROSS} to fall back to the default timezone of {config["Timezone"]["default"]}."
+            msg = f"Your timezone is currently {result}. \n React with {helpers.CROSS} to fall back to the default timezone of {config['Timezone']['default']}."
 
         message_sent = await ctx.send(msg)
         await message_sent.add_reaction(helpers.CROSS)

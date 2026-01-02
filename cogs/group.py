@@ -26,10 +26,10 @@ class Group(commands.Cog):
         You are added to a group "all" by having an area assosciated with your username.
         """
         if any(char in group for char in config["GroupRules"]["unallowed_chars"]):
-            await ctx.send(f"Group names cannot have the following characters: {config["GroupRules"]["unallowed_chars"]}")
+            await ctx.send(f"Group names cannot have the following characters: {config['GroupRules']['unallowed_chars']}")
             return
         if len(group) > int(config["GroupRules"]["max_length"]):
-            await ctx.send(f"Group names must be shorter than {config["GroupRules"]["max_length"]} characters.")
+            await ctx.send(f"Group names must be shorter than {config['GroupRules']['max_length']} characters.")
             return
         if db_helpers.get_group_id(group.upper()) == -1:
             db_helpers.add_name("groups", group)
