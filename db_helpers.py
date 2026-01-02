@@ -286,6 +286,12 @@ def get_user_timezone(user):
         return result[0][0]
     else:
         return None
+    
+def remove_user_timezone(user):
+    # TODO we already know the user has this data in the table at this point in the current implementation
+    # BUT we should add a check anyway.
+    sql = "DELETE FROM user_timezones WHERE user_id = (SELECT id FROM users WHERE name = ?);"
+    _exec_sql(sql, (user, ))
 
 
 if __name__ == "__main__":

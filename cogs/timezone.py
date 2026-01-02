@@ -2,6 +2,7 @@ from discord.ext import commands
 import db_helpers
 import helpers
 import configparser
+import asyncio
 
 config = configparser.ConfigParser()
 config.read("config.ini")
@@ -31,11 +32,40 @@ class Timezone(commands.Cog):
     @timezone.command()
     async def get(self, ctx):
         result = db_helpers.get_user_timezone(str(ctx.author.id))
-        if result is not None:
-            msg = f"Your timezone is currently {result}."
-        else:
+        if result is None:
             msg = f"Your timezone is not set. You're currently using the default timezone of {config["Timezone"]["default"]}."
-        await ctx.send(msg)
+            await ctx.send(msg)
+            return
+        else:
+            msg = f"Your timezone is currently {result}. \n React with {helpers.CROSS} to fall back to the default timezone of {config["Timezone"]["default"]}."
+
+        message_sent = await ctx.send(msg)
+        await message_sent.add_reaction(helpers.CROSS)
+
+        def check(reaction, user):
+            return (
+                user == ctx.author
+                and reaction.message.id == message_sent.id
+                and str(reaction.emoji) == helpers.CROSS
+            )
+
+        try:
+            await self.bot.wait_for(
+                "reaction_add",
+                timeout=helpers.TIMEOUT / 2,
+                check=check,
+            )
+        except asyncio.TimeoutError:
+            return
+        else:
+            db_helpers.remove_user_timezone(str(ctx.author.id))
+
+            await ctx.send(
+                f"Your timezone has been removed, {ctx.author.mention}. "
+                f"You are now using the default timezone of {config['Timezone']['default']}."
+            )
+
+            await message_sent.delete()
 
 
 async def setup(bot):
