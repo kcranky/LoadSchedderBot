@@ -82,6 +82,9 @@ class Group(commands.Cog):
 
             await ctx.send(msg)
 
+            await message_sent.delete()
+
+
     @group.command()
     async def list_all(self, ctx):
         """
