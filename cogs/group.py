@@ -74,7 +74,7 @@ class Group(commands.Cog):
             db_helpers.remove_userdata_pair(
                 str(ctx.author.id), "groups", group_selected)
 
-            msg = f"Removed {group_selected} from your groups, {ctx.author}!"
+            msg = f"Removed {group_selected} from your groups, {ctx.author.mention}!"
             # Remove group if no more members
             if db_helpers.get_group_members(group_id) == -1:
                 db_helpers.remove_group(group_id)

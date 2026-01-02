@@ -48,7 +48,7 @@ class Area(commands.Cog):
                     area_selected = area_list[index_area_selected][0]
                     db_helpers.remove_userdata_pair(
                         str(ctx.author.id), "areas", area_selected)
-                    await ctx.send("Removed {} from your areas, {}!".format(area_selected, str(ctx.author)))
+                    await ctx.send("Removed {} from your areas, {}!".format(area_selected, str(ctx.author.mention)))
                 except ValueError:
                     # User reacted with a bad emoji
                     return
@@ -94,7 +94,7 @@ class Area(commands.Cog):
                         area_selected = area_list[index_area_selected]
                         db_helpers.insert_userdata_pair(
                             str(ctx.author.id), "areas", area_selected["id"])
-                        await ctx.send("Added {} to your areas, {}!".format(area_selected["name"], str(ctx.author)))
+                        await ctx.send("Added {} to your areas, {}!".format(area_selected["name"], str(ctx.author.mention)))
                         return
                     except ValueError:
                         # something went horribly wrong
@@ -107,7 +107,7 @@ class Area(commands.Cog):
                 area_selected = area_list[index_area_selected]
                 db_helpers.insert_userdata_pair(
                     str(ctx.author.id), "areas", area_selected["id"])
-                await ctx.send("Added {} to your areas, {}!".format(area_selected["name"], str(ctx.author)))
+                await ctx.send("Added {} to your areas, {}!".format(area_selected["name"], str(ctx.author.mention)))
             except ValueError:
                 # User reacted with a bad emoji
                 return
