@@ -50,17 +50,17 @@ async def schedule(ctx, group: str, time=None):
     If you provide a time in the format HH:MM, you can ask everyone to join you at that time.
     You can schedule group "all" to see when everyone is available.
     """
+    once_off = False
     group = group.replace(" ", "")
     # check if the user and the group exist
     if db_helpers.get_id("groups", group) == -1:
-        msg = "I couldn't find a group with that name!\n"
-        msg += "Groups need to be a single word/string. If your group has multiple words, recreate it as a single word group."
-        await ctx.send(msg)
-        return
+        msg = "I couldn't find a group with that name! Assuming you want to schedule a once off...\n"
+        once_off = True
 
-    # If there's just one parameter
-    if time is None or helpers.is_time_format(time) == False:
-        hours_dict = helpers.schedule_group(group)
+    # If there's just one parameter, we asumme user is looking for when they can schedule
+    # If it's a once-off group, we look for everyone's load shedding schedule
+    if (time is None or helpers.is_time_format(time) == False):
+        hours_dict = helpers.schedule_group("ALL")
         result = helpers.stringify_can_join(hours_dict)
         if result == "[]":
             msg = "No {} today :(".format(group)
@@ -68,11 +68,12 @@ async def schedule(ctx, group: str, time=None):
             msg = "You can schedule {} at these times today: \n".format(group)
             msg += result
 
+    members = []
     if helpers.is_time_format(time):
         if group.upper() == "ALL":
             uids = db_helpers.get_all_members()
             members = [db_helpers.get_name("users", i) for i in uids]
-        else:
+        elif once_off == False:
             uids = db_helpers.get_group_members(db_helpers.get_group_id(group))
             members = [db_helpers.get_name("users", i) for i in uids]
         if len(members) == 0:
